@@ -1,0 +1,39 @@
+{
+  "無己": {
+    "totalOccurrences": 66,
+    "chaptersSpanned": 35
+  },
+  "謙卑": {
+    "totalOccurrences": 120,
+    "chaptersSpanned": 29
+  },
+  "順服": {
+    "totalOccurrences": 44,
+    "chaptersSpanned": 13
+  },
+  "屬神體系": {
+    "totalOccurrences": 12,
+    "chaptersSpanned": 10
+  },
+  "讓耶穌作王": {
+    "totalOccurrences": 51,
+    "chaptersSpanned": 37
+  },
+  "920": {
+    "totalOccurrences": 66,
+    "chaptersSpanned": 55
+  },
+  "235": {
+    "totalOccurrences": 8,
+    "chaptersSpanned": 6
+  },
+  "反敗為勝": {
+    "totalOccurrences": 5,
+    "chaptersSpanned": 3
+  },
+  "捨己": {
+    "totalOccurrences": 25,
+    "chaptersSpanned": 7
+  }
+}
+written tracks.json
