@@ -1,0 +1,17 @@
+{
+  "steps": [
+    {"no": 1, "key": "info", "zh": "資訊", "zs": "资讯", "en": "Information", "desc": {"zh": "接收到觀念本身", "zs": "接收到观念本身", "en": "Receiving the concept itself"}},
+    {"no": 2, "key": "revelation", "zh": "啟示", "zs": "启示", "en": "Revelation", "desc": {"zh": "聖靈開了心眼，真正看懂", "zs": "圣灵开了心眼，真正看懂", "en": "The Spirit opens your eyes to truly grasp it"}},
+    {"no": 3, "key": "conviction", "zh": "信服", "zs": "信服", "en": "Conviction", "desc": {"zh": "心裡被說服、願意接受", "zs": "心里被说服、愿意接受", "en": "Persuaded in your heart, willing to accept it"}},
+    {"no": 4, "key": "practice", "zh": "實踐", "zs": "实践", "en": "Practice", "desc": {"zh": "在生活中具體去做", "zs": "在生活中具体去做", "en": "Concretely doing it in daily life"}},
+    {"no": 5, "key": "review", "zh": "檢討", "zs": "检讨", "en": "Review", "desc": {"zh": "誠實回顧做得如何", "zs": "诚实回顾做得如何", "en": "Honestly reviewing how it went"}},
+    {"no": 6, "key": "correct", "zh": "修正", "zs": "修正", "en": "Correction", "desc": {"zh": "調整偏差之處", "zs": "调整偏差之处", "en": "Adjusting where you drifted"}},
+    {"no": 7, "key": "repeat", "zh": "反覆", "zs": "反复", "en": "Repetition", "desc": {"zh": "持續操練直到成為習慣", "zs": "持续操练直到成为习惯", "en": "Practicing again until it becomes habit"}},
+    {"no": 8, "key": "multiply", "zh": "繁殖", "zs": "繁殖", "en": "Multiplication", "desc": {"zh": "生命影響生命，傳給下一位", "zs": "生命影响生命，传给下一位", "en": "Life touching life, passed on to the next person"}}
+  ],
+  "note": {
+    "zh": "改變觀念的八大步驟——每一部都是一趟完整的旅程：資訊只是起點，繁殖才是終點。你在11部中對每一部走到第幾步，此圖會依你的閱讀進度與宣告紀錄自動標示。",
+    "zs": "改变观念的八大步骤——每一部都是一趟完整的旅程：资讯只是起点，繁殖才是终点。你在11部中对每一部走到第几步，此图会依你的阅读进度与宣告纪录自动标示。",
+    "en": "The eight steps of changing a mindset — each Part is a complete journey: Information is only the starting line; Multiplication is the finish line. This map marks how far you've gone in each of the 11 Parts, based on your reading progress and declarations."
+  }
+}
