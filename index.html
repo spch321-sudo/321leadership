@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>321領導力</title>
+<meta name="description" content="《321建造 教會領導力》三語陪讀App——課程、想更深、工具與AI陪讀">
+<meta name="theme-color" content="#0D3988">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#FBF8F2; --surface:#FFFFFF; --surface-alt:#F2EEE3;
+  --ink:#23211C; --ink-soft:#6B6255; --ink-faint:#9B9384;
+  --accent:#0D3988; --accent-ink:#0A2C68; --accent-soft:#E7EDF6;
+  --gold:#A9762F; --gold-soft:#F5EBD9;
+  --border:#E3DDCC; --border-strong:#CFC7B2;
+  --good:#3E7D4C; --bad:#B4432F;
+  --shadow: 0 1px 2px rgba(35,33,28,.04), 0 8px 24px -12px rgba(35,33,28,.16);
+  --tabbar-h: 62px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161410; --surface:#1E1B16; --surface-alt:#26221B;
+    --ink:#ECE6D8; --ink-soft:#B4AB98; --ink-faint:#7C7566;
+    --accent:#7FA0DE; --accent-ink:#AFC3EA; --accent-soft:#22314E;
+    --gold:#D4A65B; --gold-soft:#332A19;
+    --border:#38332A; --border-strong:#4A4436;
+    --good:#7BC28C; --bad:#E08A72;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161410; --surface:#1E1B16; --surface-alt:#26221B;
+  --ink:#ECE6D8; --ink-soft:#B4AB98; --ink-faint:#7C7566;
+  --accent:#7FA0DE; --accent-ink:#AFC3EA; --accent-soft:#22314E;
+  --gold:#D4A65B; --gold-soft:#332A19;
+  --border:#38332A; --border-strong:#4A4436;
+  --good:#7BC28C; --bad:#E08A72;
+}
+
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  line-height:1.85; font-size:16px; -webkit-font-smoothing:antialiased;
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+}
+h1,h2,h3,h4{ font-family:"Noto Serif TC","Georgia",serif; font-weight:700; color:var(--ink); line-height:1.4; }
+a{color:var(--accent)}
+img{max-width:100%}
+button{font-family:inherit;}
+[hidden]{display:none!important;}
+
+/* ---------- boot ---------- */
+#boot{
+  position:fixed; inset:0; background:var(--bg); z-index:9999;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+}
+#boot .spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#boot .bt{font-size:13px;color:var(--ink-faint);}
+#boot-diag{display:none; flex-direction:column; gap:10px; align-items:center; padding:24px; text-align:center; max-width:320px;}
+#boot-diag button{padding:10px 18px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);font-size:14px;}
+
+/* ---------- top bar ---------- */
+header.topbar{
+  position:sticky; top:0; z-index:20; background:var(--bg);
+  border-bottom:1px solid var(--border);
+  padding:10px 14px calc(10px + env(safe-area-inset-top)) 14px;
+  padding-top:calc(10px + env(safe-area-inset-top));
+  display:flex; align-items:center; gap:10px;
+}
+header.topbar .brand{display:flex; align-items:center; gap:8px; font-family:"Noto Serif TC",serif; font-weight:900; color:var(--accent); font-size:16px;}
+header.topbar .brand img{width:26px;height:26px;border-radius:6px;}
+header.topbar .spacer{flex:1;}
+.langswitch{display:flex; border:1px solid var(--border-strong); border-radius:999px; overflow:hidden; font-size:11.5px;}
+.langswitch button{border:none;background:var(--surface);color:var(--ink-soft);padding:6px 10px;font-weight:600;}
+.langswitch button.active{background:var(--accent);color:#fff;}
+
+main#view{max-width:640px; margin:0 auto; padding:16px 16px 40px; min-height:60vh;}
+
+/* ---------- tabbar ---------- */
+nav.tabbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:30;
+  height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--surface); border-top:1px solid var(--border);
+  display:flex;
+}
+nav.tabbar a{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  text-decoration:none; color:var(--ink-faint); font-size:11px; font-weight:600;
+}
+nav.tabbar a.active{color:var(--accent);}
+nav.tabbar a .dot{width:6px;height:6px;border-radius:50%;background:transparent;margin-bottom:1px;}
+nav.tabbar a.active .dot{background:var(--accent);}
+nav.tabbar a svg{width:21px;height:21px;}
+
+/* ---------- generic components ---------- */
+.card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:var(--shadow);}
+.card h3{margin:0 0 6px; font-size:16px;}
+.muted{color:var(--ink-soft); font-size:13.5px;}
+.pill{display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--gold-soft); color:var(--gold);}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:9px; border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); font-size:14px; font-weight:600; padding:10px 16px; cursor:pointer; text-decoration:none;}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+.btn.gold{background:var(--gold); border-color:var(--gold); color:#fff;}
+.btn.block{width:100%;}
+.btn:active{opacity:.8;}
+.hero-badge{display:flex; flex-direction:column; align-items:center; text-align:center; background:linear-gradient(180deg,#0D3988,#0A2C68); border-radius:16px; padding:22px 16px 18px; margin-bottom:16px; box-shadow:var(--shadow);}
+.hero-badge img{width:88px; height:88px; border-radius:18px; box-shadow:0 4px 14px rgba(0,0,0,.35); margin-bottom:10px;}
+.hero-badge .hb-title{color:#F5EBD9; font-family:"Noto Serif TC",serif; font-size:17px; font-weight:700; letter-spacing:.02em;}
+.hero-badge .hb-sub{color:#C9B98A; font-size:12px; margin-top:3px;}
+.section-title{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); font-weight:700; margin:22px 0 8px;}
+.section-title:first-child{margin-top:0;}
+.progress-ring{width:38px;height:38px;flex:0 0 auto;}
+.rowlink{display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); text-decoration:none; color:var(--ink);}
+.rowlink:last-child{border-bottom:none;}
+.rowlink .meta{flex:1; min-width:0;}
+.rowlink .meta .t{font-weight:600; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.rowlink .meta .s{font-size:12.5px; color:var(--ink-faint);}
+.rowlink .chev{color:var(--ink-faint);}
+
+/* ---------- part accordion ---------- */
+.part{border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; background:var(--surface);}
+.part > summary{list-style:none; cursor:pointer; padding:14px 16px; display:flex; align-items:center; gap:10px; font-weight:700;}
+.part > summary::-webkit-details-marker{display:none;}
+.part > summary .pn{color:var(--gold); font-family:"Noto Serif TC",serif; font-size:13px;}
+.part > summary .pt{flex:1;}
+.part .plist{padding:0 16px 8px;}
+
+/* ---------- chapter reader ---------- */
+.chhead{margin-bottom:18px;}
+.chhead .pn{color:var(--gold); font-size:12.5px; font-weight:700;}
+.chhead h1{font-size:23px; margin:6px 0 4px;}
+.chprog{display:flex; gap:8px; margin:10px 0 4px;}
+.reader p{margin:0 0 14px; font-size:16px;}
+.reader p.warn{background:var(--gold-soft); border-left:3px solid var(--gold); padding:12px 14px; border-radius:6px; font-weight:600;}
+.reader p.htype{font-weight:700; color:var(--accent); margin-bottom:2px;}
+.reader p.note{font-size:13px; color:var(--ink-faint); background:var(--surface-alt); padding:8px 12px; border-radius:6px;}
+.reader p.h4{font-weight:700; color:var(--accent-ink); margin:16px 0 4px;}
+.reader p.q{margin-bottom:10px;}
+.reader .s1{color:var(--ink-faint);} .reader .s2{color:var(--gold);} .reader .s3{color:var(--accent);font-weight:700;}
+.reader .must{background:var(--accent); color:#fff; font-size:11px; padding:1px 6px; border-radius:5px; margin-left:4px;}
+.reader h2{font-size:18px; margin:26px 0 10px; padding-top:14px; border-top:1px solid var(--border);}
+.reader h2:first-child{border-top:none; padding-top:0;}
+.reader h3{font-size:15.5px; margin:18px 0 8px;}
+.declbox{background:var(--accent-soft); border-radius:10px; padding:14px 16px; margin:12px 0;}
+.declbox p.decl{margin:0 0 8px; font-weight:600; color:var(--accent-ink); font-size:14.5px;}
+.declbox p.decl:last-child{margin-bottom:0;}
+.declbox .savebtn{margin-top:8px;}
+
+/* ---------- highlight ---------- */
+.reader p[data-hl]{background:linear-gradient(transparent 60%, var(--gold-soft) 60%); cursor:pointer; border-radius:2px;}
+
+/* ---------- deeper (想更深) ---------- */
+details.deeper{ display:block; margin:14px 0; border:1.5px solid var(--accent); border-radius:12px; background:var(--surface); overflow:hidden; }
+details.deeper summary{ list-style:none; cursor:pointer; padding:10px 14px; font-weight:700; color:var(--accent); display:flex; align-items:flex-start; gap:8px; font-size:14px; }
+details.deeper summary::-webkit-details-marker{display:none;}
+details.deeper summary::before{content:"想更深？"; font-family:"Noto Serif TC",serif; font-weight:700; flex:0 0 auto;}
+details.deeper summary .q{color:var(--ink-soft); font-weight:500;}
+details.deeper[open] summary{border-bottom:1px solid var(--border);}
+details.deeper .a{background:var(--surface-alt); padding:14px; font-size:14px; margin:0;}
+details.deeper .tierbadge{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; margin-bottom:8px;}
+details.deeper .tierA{background:var(--accent-soft); color:var(--accent);}
+details.deeper .tierB{background:var(--gold-soft); color:var(--gold);}
+details.deeper .tierC{background:var(--surface-alt); color:var(--ink-faint); border:1px solid var(--border-strong);}
+details.deeper .refs{font-size:12px; color:var(--ink-faint); margin-top:8px;}
+.deeperPending{font-size:12.5px; color:var(--ink-faint); border:1px dashed var(--border-strong); border-radius:10px; padding:8px 12px; margin:10px 0;}
+
+/* ---------- tools grid ---------- */
+.toolgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.toolcard{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; text-decoration:none; color:var(--ink); display:flex; flex-direction:column; gap:6px;}
+.toolcard .ic{font-size:22px;}
+.toolcard h4{margin:0; font-size:14px;}
+.toolcard p{margin:0; font-size:12px; color:var(--ink-faint);}
+
+/* ---------- myth card ---------- */
+.mythcard{border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden;}
+.mythcard .m{background:var(--surface-alt); padding:14px; font-weight:600; font-size:14.5px;}
+.mythcard .m::before{content:"迷思："; color:var(--bad); font-weight:700;}
+.mythcard .t{padding:14px; font-size:14px;}
+.mythcard .t::before{content:"其實："; color:var(--good); font-weight:700;}
+.mythcard .meta{padding:0 14px 12px; font-size:11.5px; color:var(--ink-faint);}
+
+/* ---------- journey map ---------- */
+.jrow{display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border);}
+.jrow:last-child{border-bottom:none;}
+.jrow .jt{width:76px; flex:0 0 auto; font-size:11.5px; color:var(--ink-soft); font-weight:600;}
+.jrow .jdots{display:flex; gap:4px; flex:1;}
+.jrow .jdots i{flex:1; height:10px; border-radius:4px; background:var(--surface-alt); border:1px solid var(--border);}
+.jrow .jdots i.on{background:var(--accent); border-color:var(--accent);}
+
+/* ---------- checklist ---------- */
+.clgroup{margin:14px 0 6px; font-weight:700; font-size:13px; color:var(--gold);}
+.clitem{display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px;}
+.clitem input{margin-top:4px; width:18px; height:18px; flex:0 0 auto;}
+
+/* ---------- prompter ---------- */
+#prompter{position:fixed; inset:0; background:var(--ink); color:#F5F1E6; z-index:9000; display:flex; flex-direction:column;}
+#prompter .ptop{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; font-size:13px; opacity:.8;}
+#prompter .pbody{flex:1; overflow-y:auto; padding:20px 26px 40px; display:flex; flex-direction:column; justify-content:center;}
+#prompter .ptitle{font-size:13px; color:#D4A65B; font-weight:700; margin-bottom:10px;}
+#prompter .pq{font-size:clamp(20px,5vw,30px); line-height:1.6; font-weight:600;}
+#prompter .ptimer{font-variant-numeric:tabular-nums; font-size:15px;}
+#prompter .ptimer.warn{color:#E08A72;}
+#prompter .pctl{display:flex; gap:10px; padding:16px 18px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid #3a362c;}
+#prompter .pctl button{flex:1; padding:12px; border-radius:9px; border:1px solid #4A4436; background:#26221B; color:#F5F1E6; font-size:14px; font-weight:600;}
+#prompter .pdots{display:flex; gap:5px; padding:0 18px 10px;}
+#prompter .pdots i{flex:1; height:4px; border-radius:2px; background:#3a362c;}
+#prompter .pdots i.done{background:#D4A65B;}
+#prompter .pdots i.now{background:#7FA0DE;}
+
+/* ---------- companion (chat) ---------- */
+.chatwrap{display:flex; flex-direction:column; height:calc(100vh - 130px);}
+.chatlog{flex:1; overflow-y:auto; padding:4px 0 12px;}
+.msg{max-width:88%; padding:10px 14px; border-radius:14px; margin-bottom:10px; font-size:14.5px; line-height:1.7;}
+.msg.user{background:var(--accent); color:#fff; margin-left:auto; border-bottom-right-radius:4px;}
+.msg.ai{background:var(--surface-alt); margin-right:auto; border-bottom-left-radius:4px;}
+.msg .tierline{display:block; font-size:11px; margin-top:6px; opacity:.75;}
+.chatinput{display:flex; gap:8px; padding:10px 0 calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); background:var(--bg);}
+.chatinput textarea{flex:1; resize:none; border:1px solid var(--border-strong); border-radius:10px; padding:10px 12px; font-size:14.5px; background:var(--surface); color:var(--ink); font-family:inherit; max-height:100px;}
+.chatinput button{border:none; background:var(--accent); color:#fff; border-radius:10px; padding:0 16px; font-weight:700;}
+
+/* ---------- me ---------- */
+.declitem{border-bottom:1px solid var(--border); padding:12px 0;}
+.declitem .d{font-size:14.5px; margin-bottom:4px;}
+.declitem .m{font-size:11.5px; color:var(--ink-faint);}
+
+.empty{text-align:center; padding:40px 20px; color:var(--ink-faint); font-size:14px;}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="spin"></div>
+  <div class="bt">321領導力載入中…</div>
+  <div id="boot-diag">
+    <div>載入時間較長，可能是網路或快取問題。</div>
+    <button id="boot-reload">重新載入</button>
+    <button id="boot-clear">清除快取並重新載入</button>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand"><img src="icons/icon-72.png" alt=""><span id="brandName">321領導力</span></div>
+  <div class="spacer"></div>
+  <div class="langswitch" id="langswitch">
+    <button data-lang="zh">繁</button><button data-lang="zs">简</button><button data-lang="en">EN</button>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<nav class="tabbar" id="tabbar">
+  <a href="#/today" data-tab="today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+    <span id="tab-today">今日</span>
+  </a>
+  <a href="#/course" data-tab="course">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 1 4 16.5v-12Z"/><path d="M4 16.5A2.5 2.5 0 0 1 6.5 14H20"/></svg>
+    <span id="tab-course">課程</span>
+  </a>
+  <a href="#/tools" data-tab="tools">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a3 3 0 1 0-4.4 4.1L3 17.7V21h3.3l7.3-7.3a3 3 0 1 0 4.1-4.1l-1.4-1.4-1.6 1.6-1-1 1.6-1.6-1.6-1.5Z"/></svg>
+    <span id="tab-tools">工具</span>
+  </a>
+  <a href="#/companion" data-tab="companion">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+    <span id="tab-companion">陪讀</span>
+  </a>
+  <a href="#/me" data-tab="me">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <span id="tab-me">我的</span>
+  </a>
+</nav>
+
+<div id="prompter" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
