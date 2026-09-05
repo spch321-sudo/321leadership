@@ -1085,30 +1085,27 @@
           return;
         }
         var opened = state.user.deeperOpened[id] ? " open" : "";
-        // "想更深" answer text uses the SAME <p data-sec data-idx> shape as every other reader
-        // paragraph (sec is a unique "deeper:<id>" key, idx is always 0 — one item = one unit)
-        // so it needs no separate click-wiring logic at all: it's picked up automatically by
-        // the existing ".reader p[data-sec]" tap-to-highlight/reflect loop below.
+        // "想更深" answer text uses the SAME <p data-sec> shape as every other reader paragraph
+        // (sec is a unique "deeper:<id>" key) so it needs no separate click-wiring logic at
+        // all: it's split into sentence spans and picked up automatically by the existing
+        // ".reader p[data-sec]" tap-to-highlight/reflect loop below.
         var dsec = "deeper:" + id;
-        var dhl = (state.user.highlights[chId] || []).some(function (h) { return h.sec === dsec && h.idx === 0; });
         out += '<details class="deeper" data-deeper-id="' + id + '"' + opened + '>';
         out += '<summary><span class="q">' + esc(it.q) + '</span><span class="chev" aria-hidden="true"></span></summary>';
         out += '<div class="a"><span class="tierbadge tier' + it.tier + '">' + esc(t().tier[it.tier]) + '</span>';
-        out += '<p data-sec="' + dsec + '" data-idx="0"' + (dhl ? ' data-hl="1"' : '') + '>' + esc(it.a) + '</p>';
+        out += '<p data-sec="' + dsec + '">' + esc(it.a) + '</p>';
         out += '<div class="refs">' + esc(it.refs) + '</div></div>';
         out += '</details>';
       });
       return out;
     }
 
-    function withHighlightAttrs(html, secKey) {
-      // wrap each top-level <p>...</p> so it can be tapped to highlight (skips p with class already special like q/note/htype handled generically too)
-      var idx = 0;
+    function withSecAttr(html, secKey) {
+      // just tag each top-level <p>...</p> with which section it belongs to — sentence
+      // splitting and per-sentence highlight-state/idx assignment all happen later, once this
+      // HTML is actually in the DOM (see the ".reader p[data-sec]" wiring loop below).
       return html.replace(/<p(\s[^>]*)?>/g, function (m) {
-        var hl = (state.user.highlights[chId] || []).some(function (h) { return h.sec === secKey && h.idx === idx; });
-        var out = m.slice(0, -1) + ' data-sec="' + secKey + '" data-idx="' + idx + '"' + (hl ? ' data-hl="1"' : '') + '>';
-        idx++;
-        return out;
+        return m.slice(0, -1) + ' data-sec="' + secKey + '">';
       });
     }
 
@@ -1129,11 +1126,11 @@
     html += '<div class="reader">';
     var hasAnyHighlight = Object.keys(state.user.highlights).some(function (k) { return (state.user.highlights[k] || []).length > 0; });
     if (!hasAnyHighlight) html += '<div class="hl-hint">' + esc(t().hlHint) + '</div>';
-    html += withHighlightAttrs(ch.intro, "intro");
+    html += withSecAttr(ch.intro, "intro");
     html += deeperHtml(anchors["intro"]);
     ch.sections.forEach(function (s) {
       html += "<h2>" + esc(s.heading) + "</h2>";
-      html += withHighlightAttrs(s.html, String(s.no));
+      html += withSecAttr(s.html, String(s.no));
       html += deeperHtml(anchors[String(s.no)]);
       if (s.no === 9) {
         html += '<div class="card" style="margin-top:6px;">';
@@ -1179,22 +1176,74 @@
       });
     });
     // wire highlight taps + the "write your reflection" bottom sheet — matching 晨讀321's own
-    // behavior: tap a paragraph once to highlight it (no sheet yet); tap it again (now that
-    // it's highlighted) to open the reflection sheet. Removing a highlight entirely is only
-    // done from inside that sheet's "移除畫線" button — a bare re-tap no longer un-highlights.
-    function findHighlight(sec, idx) {
-      return (state.user.highlights[chId] || []).find(function (h) { return h.sec === sec && h.idx === idx; });
+    // behavior, but at SENTENCE granularity, not whole-paragraph: each paragraph is split into
+    // individual sentences (on 。！？.!? plus any immediately-following closing quote/bracket),
+    // each becoming its own tappable <span class="sent">. Tap an unhighlighted sentence once to
+    // highlight just that sentence; tap an already-highlighted sentence again to open the
+    // reflection sheet. Removing a highlight is only done from inside that sheet's "移除畫線"
+    // button — a bare re-tap no longer un-highlights. Highlight identity is the triple
+    // (sec, pidx, idx): sec = section key ("intro"/"1".."10"/"deeper:<id>"), pidx = which
+    // paragraph within that section (0-based), idx = which sentence within that paragraph.
+    var SENT_END_RE = /[。！？.!?]/;
+    function isClosingPunct(ch) {
+      return ch === "」" || ch === "』" || ch === "”" || ch === "’" || ch === '"' || ch === "'" || ch === ")" || ch === "）" || ch === "》" || ch === "】";
     }
-    function renderHlNote(p, sec, idx) {
-      var next = p.nextElementSibling;
-      if (next && next.classList && next.classList.contains("hl-note")) next.remove();
-      var h = findHighlight(sec, idx);
+    function splitIntoSentenceGroups(p) {
+      // walk p's existing child nodes (a mix of text nodes and rare inline elements like the
+      // <span dir="rtl"> Greek-word aside) and group them into per-sentence node arrays —
+      // splitting only inside text nodes, never inside an element, so an inline tag always
+      // stays fully attached to whichever sentence it falls in.
+      var kids = Array.prototype.slice.call(p.childNodes);
+      var groups = [[]];
+      kids.forEach(function (node) {
+        if (node.nodeType === 3) {
+          var text = node.textContent;
+          var buf = "";
+          for (var i = 0; i < text.length; i++) {
+            buf += text[i];
+            if (SENT_END_RE.test(text[i])) {
+              var j = i + 1;
+              while (j < text.length && isClosingPunct(text[j])) { buf += text[j]; j++; }
+              i = j - 1;
+              groups[groups.length - 1].push(document.createTextNode(buf));
+              buf = "";
+              groups.push([]);
+            }
+          }
+          if (buf) groups[groups.length - 1].push(document.createTextNode(buf));
+        } else {
+          groups[groups.length - 1].push(node);
+        }
+      });
+      groups = groups.filter(function (g) { return g.length > 0; });
+      if (!groups.length) groups = [[document.createTextNode("")]];
+      return groups;
+    }
+    function findHighlight(sec, pidx, idx) {
+      return (state.user.highlights[chId] || []).find(function (h) { return h.sec === sec && h.pidx === pidx && h.idx === idx; });
+    }
+    function hlNoteKey(sec, pidx, idx) { return sec + ":" + pidx + ":" + idx; }
+    function findSentSpan(p, idx) { return p.querySelector('.sent[data-idx="' + idx + '"]'); }
+    function renderHlNote(p, sec, pidx, idx) {
+      // several sentences within the SAME paragraph can each carry their own note, so notes
+      // are identified individually (data-note-key) and kept stacked in sentence order right
+      // after the paragraph, instead of assuming there's only ever one note per paragraph.
+      var key = hlNoteKey(sec, pidx, idx);
+      var existing = p.parentNode.querySelector('.hl-note[data-note-key="' + key + '"]');
+      if (existing) existing.remove();
+      var h = findHighlight(sec, pidx, idx);
       if (!h || !h.note) return;
       var noteEl = document.createElement("div");
       noteEl.className = "hl-note";
+      noteEl.setAttribute("data-note-key", key);
+      noteEl.setAttribute("data-note-idx", idx);
       noteEl.textContent = "📝 " + h.note;
-      p.parentNode.insertBefore(noteEl, p.nextSibling);
-      noteEl.addEventListener("click", function () { openHlSheet(p, sec, idx); });
+      var anchor = p, sib = p.nextElementSibling;
+      while (sib && sib.classList && sib.classList.contains("hl-note") && parseInt(sib.getAttribute("data-note-idx"), 10) < idx) {
+        anchor = sib; sib = sib.nextElementSibling;
+      }
+      anchor.parentNode.insertBefore(noteEl, anchor.nextSibling);
+      noteEl.addEventListener("click", function () { openHlSheet(findSentSpan(p, idx), sec, pidx, idx); });
     }
     function buildAskXzQuestion(sentence, note) {
       var numFull = ch.numFull;
@@ -1216,11 +1265,12 @@
       var m = qs(".hlsheet-mask");
       if (m) m.remove();
     }
-    function openHlSheet(p, sec, idx) {
-      var h = findHighlight(sec, idx);
-      if (!h) return;
+    function openHlSheet(span, sec, pidx, idx) {
+      var h = findHighlight(sec, pidx, idx);
+      if (!h || !span) return;
       closeHlSheet();
-      var sentence = p.textContent.slice(0, 200);
+      var sentence = span.textContent.slice(0, 200);
+      var p = span.parentNode;
       var mask = document.createElement("div");
       mask.className = "hlsheet-mask";
       mask.innerHTML = '<div class="hlsheet-card">' +
@@ -1241,14 +1291,14 @@
       var ta = mask.querySelector(".hlsheet-ta");
       setTimeout(function () { ta.focus(); }, 60);
       mask.querySelector('[data-act="save"]').addEventListener("click", function () {
-        var hh = findHighlight(sec, idx);
+        var hh = findHighlight(sec, pidx, idx);
         if (hh) { hh.note = (ta.value || "").trim(); saveUser(); }
         closeHlSheet();
-        renderHlNote(p, sec, idx);
+        renderHlNote(p, sec, pidx, idx);
       });
       mask.querySelector('[data-act="ask"]').addEventListener("click", function () {
         var note = (ta.value || "").trim();
-        var hh = findHighlight(sec, idx);
+        var hh = findHighlight(sec, pidx, idx);
         if (hh) { hh.note = note; saveUser(); } // keep whatever reflection was just typed, same as Save would
         pendingAsk = buildAskXzQuestion(sentence, note);
         pendingAskAutoSend = true;
@@ -1256,38 +1306,59 @@
         navigate("#/companion/" + chId);
       });
       mask.querySelector('[data-act="clearnote"]').addEventListener("click", function () {
-        var hh = findHighlight(sec, idx);
+        var hh = findHighlight(sec, pidx, idx);
         if (hh) { hh.note = ""; saveUser(); }
         closeHlSheet();
-        renderHlNote(p, sec, idx);
+        renderHlNote(p, sec, pidx, idx);
       });
       mask.querySelector('[data-act="remove"]').addEventListener("click", function () {
         var arr = state.user.highlights[chId] || [];
-        var i = arr.findIndex(function (hh) { return hh.sec === sec && hh.idx === idx; });
+        var i = arr.findIndex(function (hh) { return hh.sec === sec && hh.pidx === pidx && hh.idx === idx; });
         if (i >= 0) arr.splice(i, 1);
         saveUser();
-        p.removeAttribute("data-hl");
-        var next = p.nextElementSibling;
-        if (next && next.classList && next.classList.contains("hl-note")) next.remove();
+        span.removeAttribute("data-hl");
+        var key = hlNoteKey(sec, pidx, idx);
+        var noteEl = p.parentNode.querySelector('.hl-note[data-note-key="' + key + '"]');
+        if (noteEl) noteEl.remove();
         closeHlSheet();
       });
       mask.querySelector('[data-act="cancel"]').addEventListener("click", closeHlSheet);
     }
+    // split every highlightable paragraph into sentence spans (pidx = paragraph position
+    // within its section, assigned here in document order — mirrors what the old regex-based
+    // per-paragraph idx counter did), restore any already-saved highlight/note state per
+    // sentence, and wire the tap handler on each sentence individually.
+    var secPCounts = {};
     qsa(".reader p[data-sec]", view).forEach(function (p) {
-      var sec0 = p.getAttribute("data-sec"), idx0 = parseInt(p.getAttribute("data-idx"), 10);
-      if (findHighlight(sec0, idx0)) renderHlNote(p, sec0, idx0);
-      p.addEventListener("click", function (e) {
-        if (e.target.closest("a") || e.target.closest(".hl-note")) return;
-        var sec = p.getAttribute("data-sec"), idx = parseInt(p.getAttribute("data-idx"), 10);
-        var arr = state.user.highlights[chId] = state.user.highlights[chId] || [];
-        var existingIdx = arr.findIndex(function (h) { return h.sec === sec && h.idx === idx; });
-        if (existingIdx >= 0) {
-          openHlSheet(p, sec, idx);
-        } else {
-          arr.push({ sec: sec, idx: idx, text: p.textContent.slice(0, 120), at: Date.now(), lang: state.lang, chId: chId, chTitle: ch.title });
-          p.setAttribute("data-hl", "1");
-          saveUser();
-        }
+      var sec = p.getAttribute("data-sec");
+      var pidx = secPCounts[sec] || 0;
+      secPCounts[sec] = pidx + 1;
+      var groups = splitIntoSentenceGroups(p);
+      while (p.firstChild) p.removeChild(p.firstChild);
+      groups.forEach(function (nodes, idx) {
+        var span = document.createElement("span");
+        span.className = "sent";
+        span.setAttribute("data-sec", sec);
+        span.setAttribute("data-pidx", pidx);
+        span.setAttribute("data-idx", idx);
+        if (findHighlight(sec, pidx, idx)) span.setAttribute("data-hl", "1");
+        nodes.forEach(function (n) { span.appendChild(n); });
+        p.appendChild(span);
+        span.addEventListener("click", function (e) {
+          if (e.target.closest("a")) return;
+          var arr = state.user.highlights[chId] = state.user.highlights[chId] || [];
+          var existingIdx = arr.findIndex(function (h) { return h.sec === sec && h.pidx === pidx && h.idx === idx; });
+          if (existingIdx >= 0) {
+            openHlSheet(span, sec, pidx, idx);
+          } else {
+            arr.push({ sec: sec, pidx: pidx, idx: idx, text: span.textContent.slice(0, 200), at: Date.now(), lang: state.lang, chId: chId, chTitle: ch.title });
+            span.setAttribute("data-hl", "1");
+            saveUser();
+          }
+        });
+      });
+      groups.forEach(function (nodes, idx) {
+        if (findHighlight(sec, pidx, idx)) renderHlNote(p, sec, pidx, idx);
       });
     });
     // wire mark done

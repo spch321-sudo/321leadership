@@ -225,8 +225,10 @@ html.fs-xl .qs-chip{font-size:16.5px;}
 html.fs-xl .empty{font-size:17.5px;}
 
 /* ---------- highlight ---------- */
-.reader p[data-hl]{background:linear-gradient(transparent 60%, var(--gold-soft) 60%); cursor:pointer; border-radius:2px;}
+.reader .sent{cursor:pointer;}
+.reader .sent[data-hl]{background:linear-gradient(transparent 60%, var(--gold-soft) 60%); border-radius:2px;}
 .hl-note{margin:-8px 0 14px; padding:8px 12px; background:var(--surface-alt); border-left:3px solid var(--gold); border-radius:6px; font-size:13px; color:var(--ink); white-space:pre-wrap; cursor:pointer; line-height:1.5;}
+.hl-note + .hl-note{margin-top:8px;}
 .hl-hint{background:var(--gold-soft); color:var(--gold); border-radius:8px; padding:9px 12px; font-size:12.5px; line-height:1.6; margin-bottom:14px;}
 
 /* ---------- highlight reflection sheet (bottom sheet modal) ---------- */
