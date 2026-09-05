@@ -9,7 +9,7 @@
   var LANG_KEY = "l321_lang";
   var THEME_KEY = "l321_theme";
   var FONT_KEY = "l321_font";
-  var FONT_CLASS = ["", "fs-lg", "fs-xl"];
+  var FONT_CLASS = ["", "fs-lg", "fs-xl", "fs-xxl"];
 
   // ---------------------------------------------------------------
   // i18n (chrome / UI strings — content itself comes from data files)
@@ -48,7 +48,7 @@
       companionQsToggle: "💡 範例問題", companionQsHide: "收起範例問題", companionQsHint: "點一下問題，直接問小智",
       msgExpand: "展開全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "刪除", msgDeleteConfirm: "要刪除這則回覆嗎？",
       meFavorites: "我的收藏", meNoFavorites: "還沒有收藏。在陪讀對話中點一下「收藏」，把小智的回答留下來。",
-      meFontSize: "字級大小", fontStandard: "標準", fontLarge: "大", fontXLarge: "特大",
+      meFontSize: "字級大小", fontStandard: "標準", fontLarge: "大", fontXLarge: "特大", fontXXLarge: "超大",
       meVoice: "朗讀聲音",
     },
     zs: {
@@ -84,7 +84,7 @@
       companionQsToggle: "💡 范例问题", companionQsHide: "收起范例问题", companionQsHint: "点一下问题，直接问小智",
       msgExpand: "展开全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "删除", msgDeleteConfirm: "要删除这则回复吗？",
       meFavorites: "我的收藏", meNoFavorites: "还没有收藏。在陪读对话中点一下「收藏」，把小智的回答留下来。",
-      meFontSize: "字级大小", fontStandard: "标准", fontLarge: "大", fontXLarge: "特大",
+      meFontSize: "字级大小", fontStandard: "标准", fontLarge: "大", fontXLarge: "特大", fontXXLarge: "超大",
       meVoice: "朗读声音",
     },
     en: {
@@ -120,7 +120,7 @@
       companionQsToggle: "💡 Example Questions", companionQsHide: "Hide Example Questions", companionQsHint: "Tap a question to ask Sage AI directly",
       msgExpand: "Show more", msgCollapse: "Collapse", msgSave: "Save", msgSaved: "Saved", msgDelete: "Delete", msgDeleteConfirm: "Delete this reply?",
       meFavorites: "My Saved Replies", meNoFavorites: "No saved replies yet. Tap “Save” under one of Sage AI's answers to keep it here.",
-      meFontSize: "Font Size", fontStandard: "Standard", fontLarge: "Large", fontXLarge: "X-Large",
+      meFontSize: "Font Size", fontStandard: "Standard", fontLarge: "Large", fontXLarge: "X-Large", fontXXLarge: "XX-Large",
       meVoice: "Reading Voice",
     },
   };
@@ -132,7 +132,7 @@
     lang: localStorage.getItem(LANG_KEY) || "zh",
     data: {},        // lang -> parsed data.json
     user: loadUser(),
-    font: parseInt(localStorage.getItem(FONT_KEY), 10) || 0, // 0=標準 1=大 2=特大
+    font: parseInt(localStorage.getItem(FONT_KEY), 10) || 0, // 0=標準 1=大 2=特大 3=超大
   };
 
   function t() { return UI[state.lang]; }
@@ -162,7 +162,7 @@
 
   function applyFont() {
     try {
-      document.documentElement.classList.remove("fs-lg", "fs-xl");
+      document.documentElement.classList.remove("fs-lg", "fs-xl", "fs-xxl");
       var cls = FONT_CLASS[state.font] || "";
       if (cls) document.documentElement.classList.add(cls);
     } catch (e) {}
@@ -172,7 +172,7 @@
     try { localStorage.setItem(FONT_KEY, String(state.font)); } catch (e) {}
     applyFont();
   }
-  function cycleFont() { setFont((state.font + 1) % 3); }
+  function cycleFont() { setFont((state.font + 1) % FONT_CLASS.length); }
   window.cycleFont = cycleFont;
 
   // ---------------------------------------------------------------
@@ -326,16 +326,17 @@
   // 321專用術語的數字要「逐字讀」（3-2-1／9-2-0／2-3-5），不是唸成整數
   // （如「三百二十一」）。用正則把獨立出現的321/920/235換成逐字的中文數字，
   // 只在zh／zs生效；(?<![0-9])…(?![0-9]) 確保不會誤觸更長數字（如1920、2350）中的子字串。
-  // v1.3.12修正：全書絕大多數321/920/235其實是緊接著中文字的品牌複合詞（「321理念」「321建造」
-  // 「國度321空中團契」「920的操練」等），把它們硬拆成三個獨立漢字數字（三二一）朗讀時，
-  // 語音引擎容易唸成刻意分開、有停頓的「倒數」語氣（三…二…一…），聽起來斷斷續續、不自然；
-  // 改成只在321/920/235「不」緊接著另一個中文字時才逐字轉換（也就是後面接標點、引號、空白或
-  // 句尾的情況，例如獨立出現的「3-2-1」），緊接著中文字的品牌複合詞則保留阿拉伯數字原樣，交給
-  // 語音引擎自己用更自然的語速念出（不會被誤讀成整數三百二十一，因為後面接的是抽象名詞而非量詞）。
+  // v1.3.12曾經試著改成「後面緊接中文字時保留阿拉伯數字原樣、交給語音引擎自己唸」，
+  // 目的是讓「321理念」這種緊接中文字的品牌複合詞唸起來不要像分開的倒數語氣；
+  // v1.3.14修正（還原）：實測發現這個調整反而更糟——語音引擎把沒轉換的阿拉伯數字「321」
+  // 直接當成整數唸，繁體唸成「三百二十一」、簡體唸成更離譜的「三二十一」，完全錯誤，
+  // 比原本「三…二…一…」略顯生硬但至少數字正確的唸法還糟。所以改回一律逐字轉換
+  // （只要不是被更長的數字包住，例如1920、2350裡的子字串不會誤觸），
+  // 不再依「後面是否緊接中文字」而保留原樣。
   var TTS_DIGIT_FIXES = [
-    [/(?<![0-9])321(?![0-9一-鿿])/g, "三二一"],
-    [/(?<![0-9])920(?![0-9一-鿿])/g, "九二零"],
-    [/(?<![0-9])235(?![0-9一-鿿])/g, "二三五"],
+    [/(?<![0-9])321(?![0-9])/g, "三二一"],
+    [/(?<![0-9])920(?![0-9])/g, "九二零"],
+    [/(?<![0-9])235(?![0-9])/g, "二三五"],
   ];
   // English edition: same brand terms should be read digit-by-digit too ("three two one",
   // not "three hundred twenty-one"). Same not-adjacent-to-another-digit guard.
@@ -675,6 +676,30 @@
   // this makes the second caller just await the first call's own promise instead of firing
   // a duplicate network request.
   var TTS_INFLIGHT = {};
+  // v1.3.14：使用者反映「開啟App後切換到簡體版」朗讀常常直接變成裝置內建的機械音，
+  // 抓不到真人語音（雲帆）。這種「第一次請求就失敗、之後多半正常」的症狀，最常見的原因
+  // 是Worker剛被喚醒的冷啟動延遲，或行動網路上第一次連線建立比較慢——單次請求超時或
+  // 失敗不代表Worker真的壞了。原本一失敗就整段朗讀永久改用裝置語音，現在改成失敗時
+  // 先等一下自動重試一次（真人語音失敗的機會因此大幅降低），兩次都失敗才真的判定為
+  // 連不上、改用裝置內建語音。
+  var TTS_RETRY_DELAY_MS = 700;
+  function yunFetchOnce(voice, rate, piece) {
+    return fetch(TTS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ voice: voice, rate: rate, sil: TTS_SIL_SENTENCE, silc: TTS_SIL_COMMA, sile: TTS_SIL_ENUM, text: piece }),
+    }).then(function (res) {
+      if (!res.ok) throw new Error("TTS HTTP " + res.status);
+      return res;
+    });
+  }
+  function yunFetchWithRetry(voice, rate, piece) {
+    return yunFetchOnce(voice, rate, piece).catch(function (err) {
+      return new Promise(function (resolve) { setTimeout(resolve, TTS_RETRY_DELAY_MS); })
+        .then(function () { return yunFetchOnce(voice, rate, piece); })
+        .catch(function () { throw err; }); // report the original failure if the retry also fails
+    });
+  }
   function yunFetchBuffer(piece) {
     var voice = ttsVoiceName(), rate = "+0%";
     var key = ttsCacheKeyFor(voice, rate, piece);
@@ -686,12 +711,7 @@
       var matchP = (cache && req) ? cache.match(req) : Promise.resolve(null);
       return matchP.then(function (cached) {
         if (cached) return cached.arrayBuffer();
-        return fetch(TTS_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ voice: voice, rate: rate, sil: TTS_SIL_SENTENCE, silc: TTS_SIL_COMMA, sile: TTS_SIL_ENUM, text: piece }),
-        }).then(function (res) {
-          if (!res.ok) throw new Error("TTS HTTP " + res.status);
+        return yunFetchWithRetry(voice, rate, piece).then(function (res) {
           var resForCache = (cache && req) ? res.clone() : null;
           return res.arrayBuffer().then(function (buf) {
             // Wait for the cache write to actually land before resolving — otherwise an
@@ -2144,7 +2164,7 @@
     html += '</div>';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);">';
     html += '<span>' + esc(t().meFontSize) + '</span>';
-    html += '<div class="langswitch" id="fontswitch"><button data-font="0">' + esc(t().fontStandard) + '</button><button data-font="1">' + esc(t().fontLarge) + '</button><button data-font="2">' + esc(t().fontXLarge) + '</button></div>';
+    html += '<div class="langswitch" id="fontswitch"><button data-font="0">' + esc(t().fontStandard) + '</button><button data-font="1">' + esc(t().fontLarge) + '</button><button data-font="2">' + esc(t().fontXLarge) + '</button><button data-font="3">' + esc(t().fontXXLarge) + '</button></div>';
     html += '</div>';
     var voiceOpts = TTS_VOICE_OPTIONS[state.lang] || TTS_VOICE_OPTIONS.zh;
     var curVoiceId = (state.user.ttsVoice && state.user.ttsVoice[state.lang]) || TTS_VOICE_DEFAULT[state.lang];
