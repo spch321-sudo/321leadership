@@ -254,6 +254,8 @@
     ["骯髒", "骯張"], ["內臟", "內葬"],
     ["中間", "忠間"], ["中獎", "眾獎"], ["中毒", "眾毒"],
     ["種子", "腫子"], ["種花", "眾花"],
+    ["教會", "叫會"], // 全書「教會」都是名詞（宗教/教育的教，ㄐㄧㄠˋ），不是「教書」的ㄐㄧㄠ動詞讀音
+    ["看、聽、想、講、行", "看、聽、想、講、型"], // 提綱固定用語「看聽想講行」的「行」是ㄒㄧㄥˊ（力行/實行），不是ㄏㄤˊ／ㄒㄧㄥˋ
   ];
   var TTS_FIX_ZS = [ // Simplified Chinese / Mainland standard reading
     ["血液循环", "穴液循环"], ["流血了", "流写了"], ["血淋淋", "写淋淋"],
@@ -293,6 +295,8 @@
     ["肮脏", "肮张"], ["内脏", "内葬"],
     ["中间", "忠间"], ["中奖", "众奖"], ["中毒", "众毒"],
     ["种子", "肿子"], ["种花", "众花"],
+    ["教会", "叫会"], // 全书「教会」都是名词（宗教/教育的教，ㄐㄧㄠˋ），不是「教书」的ㄐㄧㄠ动词读音
+    ["看、听、想、讲、行", "看、听、想、讲、型"], // 提纲固定用语「看听想讲行」的「行」是ㄒㄧㄥˊ（力行/实行），不是ㄏㄤˊ／ㄒㄧㄥˋ
   ];
   // 321專用術語的數字要「逐字讀」（3-2-1／9-2-0／2-3-5），不是唸成整數
   // （如「三百二十一」）。用正則把獨立出現的321/920/235換成逐字的中文數字，
@@ -343,19 +347,15 @@
     "彼得前書", "彼前", "彼得後書", "彼後", "約翰一書", "約一", "約壹", "約翰二書", "約二", "約貳", "約翰三書", "約三", "約參",
     "猶大書", "猶", "啟示錄", "啟",
   ];
+  // NOTE (fixed in v1.3.7): this list used to be independently (and incompletely) authored —
+  // it was missing "路加福音"/"路" (Luke) entirely, plus most single-character book
+  // abbreviations (创/出/利/民/申/得/太/可/路/徒/加/弗/腓/西/雅/多/彼前/帖前/帖后/提前/提后 …).
+  // Any scripture citation using one of those missing forms silently failed the
+  // "book name + number" detection in stripScriptureRefParens() and so never got skipped
+  // during 簡體 read-aloud. Now generated as an exact simplified-character mirror of
+  // BIBLE_BOOKS_ZH (same 135 entries, same order) so the two lists can never drift apart again.
   var BIBLE_BOOKS_ZS = [
-    "创世记", "出埃及记", "利未记", "民数记", "申命记", "约书亚记", "书", "士师记", "路得记",
-    "撒母耳记上", "撒母耳记下", "列王纪上", "列王纪下", "历代志上", "历代志下",
-    "以斯拉记", "尼希米记", "以斯帖记", "约伯记", "诗篇", "诗", "传道书", "传",
-    "以赛亚书", "赛", "耶利米书", "以西结书", "结", "但以理书",
-    "何西阿书", "约珥书", "阿摩司书", "俄巴底亚书", "约拿书", "弥迦书", "弥",
-    "那鸿书", "鸿", "哈巴谷书", "西番雅书", "哈该书", "该", "撒迦利亚书", "亚", "玛拉基书", "玛",
-    "马太福音", "马可福音", "约翰福音", "约", "使徒行传", "罗马书", "罗",
-    "哥林多前书", "哥林多后书", "林后", "加拉太书", "以弗所书", "腓立比书",
-    "歌罗西书", "帖撒罗尼迦前书", "帖撒罗尼迦后书", "帖后", "提摩太前书", "提摩太后书", "提后",
-    "提多书", "腓利门书", "门", "希伯来书", "来", "雅各书",
-    "彼得前书", "彼得后书", "彼后", "约翰一书", "约一", "约壹", "约翰二书", "约二", "约贰", "约翰三书", "约三", "约参",
-    "犹大书", "犹", "启示录", "启",
+    "创世记", "创", "出埃及记", "出", "利未记", "利", "民数记", "民", "申命记", "申", "约书亚记", "书", "士师记", "士", "路得记", "得", "撒母耳记上", "撒上", "撒母耳记下", "撒下", "列王纪上", "王上", "列王纪下", "王下", "历代志上", "代上", "历代志下", "代下", "以斯拉记", "拉", "尼希米记", "尼", "以斯帖记", "斯", "约伯记", "伯", "诗篇", "诗", "箴言", "箴", "传道书", "传", "雅歌", "歌", "以赛亚书", "赛", "耶利米书", "耶", "耶利米哀歌", "哀", "以西结书", "结", "但以理书", "但", "何西阿书", "何", "约珥书", "珥", "阿摩司书", "摩", "俄巴底亚书", "俄", "约拿书", "拿", "弥迦书", "弥", "那鸿书", "鸿", "哈巴谷书", "哈", "西番雅书", "番", "哈该书", "该", "撒迦利亚书", "亚", "玛拉基书", "玛", "马太福音", "太", "马可福音", "可", "路加福音", "路", "约翰福音", "约", "使徒行传", "徒", "罗马书", "罗", "哥林多前书", "林前", "哥林多后书", "林后", "加拉太书", "加", "以弗所书", "弗", "腓立比书", "腓", "歌罗西书", "西", "帖撒罗尼迦前书", "帖前", "帖撒罗尼迦后书", "帖后", "提摩太前书", "提前", "提摩太后书", "提后", "提多书", "多", "腓利门书", "门", "希伯来书", "来", "雅各书", "雅", "彼得前书", "彼前", "彼得后书", "彼后", "约翰一书", "约一", "约壹", "约翰二书", "约二", "约贰", "约翰三书", "约三", "约参", "犹大书", "犹", "启示录", "启",
   ];
   var BIBLE_BOOKS_EN = [
     "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth",
@@ -380,11 +380,15 @@
     var hasBookDigit = new RegExp("(" + alt + ")\\s*[0-9一二三四五六七八九十百千]");
     var refToken = lang === "en"
       ? new RegExp("(" + alt + ")\\s+[0-9]{1,3}\\s*[:：]\\s*[0-9]{1,3}(?:\\s*[-–~]\\s*[0-9]{1,3})?", "g")
-      : new RegExp("(" + alt + ")\\s*[一二三四五六七八九十百千0-9]+\\s*章\\s*[一二三四五六七八九十百千0-9]*(?:\\s*[至到\\-–~]\\s*[一二三四五六七八九十百千0-9]+)?\\s*節?", "g");
+      : new RegExp("(" + alt + ")\\s*[一二三四五六七八九十百千0-9]+\\s*章\\s*[一二三四五六七八九十百千0-9]*(?:\\s*[至到\\-–~]\\s*[一二三四五六七八九十百千0-9]+)?\\s*[節节]?", "g");
     return String(text || "").replace(/\s?[（(]([^（）()]*)[）)]/g, function (m, inner) {
       if (!hasBookDigit.test(inner)) return m; // no "book name + number" inside → not a reference, leave untouched
       var t = inner.replace(refToken, "");
-      t = lang === "en" ? t.replace(/\b(and|cf|see)\b/gi, "") : t.replace(/[、，,;；和與与及節章篇上下至到參见見cf]/gi, "");
+      // NOTE: this connector-cleanup list must cover BOTH Traditional and Simplified forms of
+      // every particle (與/与, 見/见, 節/节, 參/参, …) — a Simplified-only leftover here used to
+      // make the SC edition wrongly conclude "something meaningful remains" and keep the whole
+      // parenthetical un-stripped, even though the reference token itself had matched fine.
+      t = lang === "en" ? t.replace(/\b(and|cf|see)\b/gi, "") : t.replace(/[、，,;；和與与及節节章篇上下至到參参见見cf]/gi, "");
       t = t.replace(/[\s\-–~:：]/g, "");
       return t.length ? m : ""; // anything meaningful left over → keep the whole parenthetical as-is
     });
@@ -1081,10 +1085,16 @@
           return;
         }
         var opened = state.user.deeperOpened[id] ? " open" : "";
+        // "想更深" answer text uses the SAME <p data-sec data-idx> shape as every other reader
+        // paragraph (sec is a unique "deeper:<id>" key, idx is always 0 — one item = one unit)
+        // so it needs no separate click-wiring logic at all: it's picked up automatically by
+        // the existing ".reader p[data-sec]" tap-to-highlight/reflect loop below.
+        var dsec = "deeper:" + id;
+        var dhl = (state.user.highlights[chId] || []).some(function (h) { return h.sec === dsec && h.idx === 0; });
         out += '<details class="deeper" data-deeper-id="' + id + '"' + opened + '>';
         out += '<summary><span class="q">' + esc(it.q) + '</span><span class="chev" aria-hidden="true"></span></summary>';
         out += '<div class="a"><span class="tierbadge tier' + it.tier + '">' + esc(t().tier[it.tier]) + '</span>';
-        out += '<div>' + esc(it.a) + '</div>';
+        out += '<p data-sec="' + dsec + '" data-idx="0"' + (dhl ? ' data-hl="1"' : '') + '>' + esc(it.a) + '</p>';
         out += '<div class="refs">' + esc(it.refs) + '</div></div>';
         out += '</details>';
       });
