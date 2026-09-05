@@ -219,11 +219,16 @@
     { id: "blue", dot: "#6C93D1" },
     { id: "pink", dot: "#E58FA0" },
     { id: "purple", dot: "#A48AC9" },
+    // v1.3.13：深色系三色（酒紅／咖啡棕／墨黑），跟前五色的淺亮色系做出區隔，
+    // 適合想標記「較沉重、較嚴肅」語氣的段落（例如警語、罪性反省）時使用。
+    { id: "maroon", dot: "#8C4A4E" },
+    { id: "brown", dot: "#8A6740" },
+    { id: "charcoal", dot: "#54534E" },
   ];
   var HL_COLOR_NAMES = {
-    zh: { gold: "金", green: "綠", blue: "藍", pink: "粉", purple: "紫" },
-    zs: { gold: "金", green: "绿", blue: "蓝", pink: "粉", purple: "紫" },
-    en: { gold: "Gold", green: "Green", blue: "Blue", pink: "Pink", purple: "Purple" },
+    zh: { gold: "金", green: "綠", blue: "藍", pink: "粉", purple: "紫", maroon: "酒紅", brown: "咖啡", charcoal: "墨黑" },
+    zs: { gold: "金", green: "绿", blue: "蓝", pink: "粉", purple: "紫", maroon: "酒红", brown: "咖啡", charcoal: "墨黑" },
+    en: { gold: "Gold", green: "Green", blue: "Blue", pink: "Pink", purple: "Purple", maroon: "Maroon", brown: "Brown", charcoal: "Charcoal" },
   };
 
   // ---------------------------------------------------------------
