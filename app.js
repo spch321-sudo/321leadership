@@ -44,6 +44,8 @@
       tier: { A: "A｜聖經明文教導", B: "B｜可討論的神學推論", C: "C｜321應用性表達" },
       part: "第", of: "，共",
       companionQsToggle: "💡 範例問題", companionQsHide: "收起範例問題", companionQsHint: "點一下問題，直接問小智",
+      msgExpand: "展開全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "刪除", msgDeleteConfirm: "要刪除這則回覆嗎？",
+      meFavorites: "我的收藏", meNoFavorites: "還沒有收藏。在陪讀對話中點一下「收藏」，把小智的回答留下來。",
     },
     zs: {
       brand: "321领导力", tabToday: "今日", tabCourse: "课程", tabTools: "工具", tabCompanion: "陪读", tabMe: "我的",
@@ -74,6 +76,8 @@
       tier: { A: "A｜圣经明文教导", B: "B｜可讨论的神学推论", C: "C｜321应用性表达" },
       part: "第", of: "，共",
       companionQsToggle: "💡 范例问题", companionQsHide: "收起范例问题", companionQsHint: "点一下问题，直接问小智",
+      msgExpand: "展开全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "删除", msgDeleteConfirm: "要删除这则回复吗？",
+      meFavorites: "我的收藏", meNoFavorites: "还没有收藏。在陪读对话中点一下「收藏」，把小智的回答留下来。",
     },
     en: {
       brand: "321 Leadership", tabToday: "Today", tabCourse: "Lessons", tabTools: "Tools", tabCompanion: "Companion", tabMe: "Me",
@@ -104,6 +108,8 @@
       tier: { A: "A | Explicit Scripture Teaching", B: "B | Reasoned Theological Inference", C: "C | 321's Applied Language" },
       part: "Part ", of: " of ",
       companionQsToggle: "💡 Example Questions", companionQsHide: "Hide Example Questions", companionQsHint: "Tap a question to ask Xiao Zhi directly",
+      msgExpand: "Show more", msgCollapse: "Collapse", msgSave: "Save", msgSaved: "Saved", msgDelete: "Delete", msgDeleteConfirm: "Delete this reply?",
+      meFavorites: "My Saved Replies", meNoFavorites: "No saved replies yet. Tap “Save” under one of Xiao Zhi's answers to keep it here.",
     },
   };
 
@@ -168,6 +174,112 @@
   var TTS_VOICE_BY_LANG = { zh: "zh-TW-YunJheNeural", zs: "zh-CN-YunxiNeural", en: "en-US-AndrewNeural" };
   var TTS_SIL_SENTENCE = 140, TTS_SIL_COMMA = 140, TTS_SIL_ENUM = 260;
 
+  // ---------------------------------------------------------------
+  // TTS pronunciation fix-up ("破音字" homophone substitution) — applied ONLY
+  // to the text sent to the speech engine, never to anything shown on screen.
+  // Chinese TTS engines routinely mis-read polyphonic characters (破音字);
+  // these word-level substitutions swap in a homophone that forces the
+  // correct reading, per Taiwan (zh) vs Mainland (zs) standard pronunciation.
+  // Applied longest-pattern-first so multi-character phrases aren't partially
+  // clobbered by a shorter overlapping pattern.
+  // ---------------------------------------------------------------
+  var TTS_FIX_ZH = [ // Traditional Chinese / Taiwan standard reading
+    ["血液循環", "寫液循環"], ["血流成河", "穴流成河"], ["心血", "心穴"], ["流血", "流寫"],
+    ["便宜貨", "胼宜貨"], ["方便", "方變"], ["順便", "順變"],
+    ["得著", "得鑿"], ["睡著", "睡鑿"], ["著火", "鑿火"], ["著陸", "灼陸"], ["著想", "灼想"], ["著裝", "灼裝"], ["看著", "看這"], ["聽著", "聽這"], ["慢著", "慢這"],
+    ["我和你", "我漢你"], ["一唱一和", "一唱一賀"], ["和平", "何平"], ["和麵", "活麵"],
+    ["期待", "七待"], ["星期", "星七"], ["期間", "七間"],
+    ["阿姨", "啊姨"], ["阿諛奉承", "婀諛奉承"],
+    ["把手拿開", "巴手拿開"], ["刀把", "刀爸"], ["茶壺把兒", "茶壺爸兒"],
+    ["紙很薄", "紙很刨"], ["薄弱", "勃弱"], ["刻薄", "刻勃"], ["薄荷糖", "迫荷糖"],
+    ["背景", "貝景"], ["背叛", "貝叛"], ["背包", "杯包"],
+    ["東奔西跑", "東本西跑"], ["投奔", "投笨"], ["奔向目標", "笨向目標"],
+    ["參加", "餐加"], ["人參", "人深"], ["參差不齊", "蹭差不齊"],
+    ["收藏", "收常"], ["躲藏", "躲常"], ["西藏", "西葬"], ["寶藏", "寶葬"],
+    ["差別", "叉別"], ["很差", "很岔"], ["差點", "岔點"], ["出差", "出柴"], ["公差", "公柴"], ["參差", "參呲"],
+    ["長短", "常短"], ["長江", "常江"], ["長大", "掌大"], ["校長", "校掌"],
+    ["倒車", "道車"], ["倒茶", "道茶"], ["跌倒", "跌島"], ["公司倒閉", "公司島閉"],
+    ["得到", "德到"], ["你得加油", "你歹加油"], ["跑得快", "跑的快"],
+    ["的確", "敵確"], ["目的", "目地"],
+    ["身分", "身份"], ["本分", "本份"], ["分開", "吩開"],
+    ["角色", "決色"], ["主角", "主決"], ["角度", "腳度"],
+    ["企業企劃", "氣業氣劃"],
+    ["懸崖勒馬", "懸巖樂馬"], ["勒索", "樂索"], ["勒緊", "雷緊"],
+    ["測量", "測良"], ["量身高", "良身高"], ["數量", "數亮"], ["力量", "力亮"],
+    ["露水", "路水"], ["暴露", "暴路"], ["露馬腳", "漏馬腳"],
+    ["降落", "降洛"], ["落枕", "酪枕"], ["丟三落四", "丟三辣四"],
+    ["效率", "效綠"], ["機率", "機綠"], ["率領", "帥領"],
+    ["困難", "苦南"], ["災難", "災南"],
+    ["強大", "牆大"], ["勉強", "勉搶"], ["倔強", "倔匠"],
+    ["切西瓜", "七西瓜"], ["一切", "一妾"],
+    ["彎曲", "彎區"], ["歌曲", "歌取"],
+    ["塞車", "腮車"], ["阻塞", "阻澀"], ["邊塞", "邊賽"],
+    ["少年", "哨年"], ["老少咸宜", "老哨咸宜"],
+    ["剝削", "剝靴"], ["削蘋果", "消蘋果"],
+    ["液體", "頁體"], ["汁液", "汁頁"],
+    ["記載", "記宰"], ["刊載", "刊宰"], ["載客", "在客"], ["載歌載舞", "在歌在舞"],
+    ["骯髒", "骯張"], ["內臟", "內葬"],
+    ["中間", "忠間"], ["中獎", "眾獎"], ["中毒", "眾毒"],
+    ["種子", "腫子"], ["種花", "眾花"],
+  ];
+  var TTS_FIX_ZS = [ // Simplified Chinese / Mainland standard reading
+    ["血液循环", "穴液循环"], ["流血了", "流写了"], ["血淋淋", "写淋淋"],
+    ["便宜货", "胼宜货"], ["方便", "方变"], ["顺便", "顺变"],
+    ["得着", "得凿"], ["睡着", "睡凿"], ["着火", "凿火"], ["着陆", "灼陆"], ["着想", "灼想"], ["着装", "灼装"], ["看着", "看这"], ["听着", "听这"],
+    ["我和你", "我河你"], ["一唱一和", "一唱一贺"], ["和面", "活面"], ["和泥", "活泥"], ["搅和", "搅货"],
+    ["期待", "七待"], ["星期", "星七"], ["期间", "七间"],
+    ["阿姨", "啊姨"], ["阿谀奉承", "婀谀奉承"],
+    ["把手拿开", "巴手拿开"], ["刀把", "刀爸"], ["茶壶把儿", "茶壶爸儿"],
+    ["纸很薄", "纸很雹"], ["薄弱", "勃弱"], ["刻薄", "勃刻"], ["薄荷糖", "迫荷糖"],
+    ["背景", "贝景"], ["背叛", "贝叛"], ["背包", "杯包"],
+    ["东奔西跑", "东本西跑"], ["投奔", "投笨"], ["奔向目标", "笨向目标"],
+    ["参加", "餐加"], ["人参", "人深"], ["参差不齐", "蹭差不齐"],
+    ["收藏", "收常"], ["躲藏", "躲常"], ["西藏", "西葬"], ["宝藏", "宝葬"],
+    ["差别", "叉别"], ["很差", "很岔"], ["差点", "岔点"], ["出差", "出柴"], ["公差", "公柴"], ["参差", "参呲"],
+    ["长短", "常短"], ["长江", "常江"], ["长大", "掌大"], ["校长", "校掌"],
+    ["倒车", "道车"], ["倒茶", "道茶"], ["跌倒", "跌岛"], ["公司倒闭", "公司岛闭"],
+    ["得到", "德到"], ["你得加油", "你歹加油"], ["跑得快", "跑的快"],
+    ["的确", "敌确"], ["目的", "目地"],
+    ["成分", "成份"], ["分开", "吩开"],
+    ["角色", "决色"], ["主角", "主决"], ["角度", "脚度"],
+    ["企业企划", "起业起划"],
+    ["测量", "测良"], ["量身高", "良身高"], ["数量", "数亮"], ["力量", "力亮"],
+    ["露水", "路水"], ["暴露", "暴路"], ["露马脚", "漏马脚"],
+    ["降落", "降洛"], ["落枕", "酪枕"], ["丢三落四", "丢三辣四"],
+    ["效率", "效绿"], ["机率", "机绿"], ["率领", "帅领"],
+    ["困难", "苦南"], ["灾难", "灾南"],
+    ["强大", "墙大"], ["勉强", "勉抢"], ["倔强", "倔匠"],
+    ["切西瓜", "七西瓜"], ["一切", "一妾"],
+    ["弯曲", "弯区"], ["歌曲", "歌取"],
+    ["塞车", "腮车"], ["阻塞", "阻色"], ["边塞", "边赛"],
+    ["少年", "哨年"], ["老少咸宜", "老哨咸宜"],
+    ["剥削", "剥靴"], ["削苹果", "消苹果"],
+    ["液体", "夜体"], ["汁液", "汁夜"],
+    ["记载", "记宰"], ["刊载", "刊宰"], ["载客", "在客"], ["载歌载舞", "在歌在舞"],
+    ["肮脏", "肮张"], ["内脏", "内葬"],
+    ["中间", "忠间"], ["中奖", "众奖"], ["中毒", "众毒"],
+    ["种子", "肿子"], ["种花", "众花"],
+  ];
+  // 321專用術語的數字要「逐字讀」（3-2-1／9-2-0／2-3-5），不是唸成整數
+  // （如「三百二十一」）。用正則把獨立出現的321/920/235換成逐字的中文數字，
+  // 只在zh／zs生效；(?<![0-9])…(?![0-9]) 確保不會誤觸更長數字（如1920、2350）中的子字串。
+  var TTS_DIGIT_FIXES = [
+    [/(?<![0-9])321(?![0-9])/g, "三二一"],
+    [/(?<![0-9])920(?![0-9])/g, "九二零"],
+    [/(?<![0-9])235(?![0-9])/g, "二三五"],
+  ];
+  function ttsPronounceFix(text) {
+    if (!text) return text;
+    var out = String(text);
+    if (state.lang === "zh" || state.lang === "zs") {
+      TTS_DIGIT_FIXES.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
+    }
+    var fixes = state.lang === "zs" ? TTS_FIX_ZS : (state.lang === "zh" ? TTS_FIX_ZH : null);
+    if (!fixes) return out;
+    for (var i = 0; i < fixes.length; i++) { out = out.split(fixes[i][0]).join(fixes[i][1]); }
+    return out;
+  }
+
   var spk = {
     supported: (typeof window !== "undefined" && "speechSynthesis" in window),
     active: false, paused: false, mode: "", queue: [], idx: 0, token: 0, curChId: null, audio: null,
@@ -212,13 +324,43 @@
     });
     return out2.length ? out2 : [t];
   }
+  // 帶入「想更深」時，用自然口吻的引言句，而不是把題目/內容直接接在正文後面唸。
+  var DEEPER_SPEAK_LEAD = {
+    zh: "我們一起來想更深一點。",
+    zs: "我们一起来想更深一点。",
+    en: "Let's pause for a moment and think a bit deeper.",
+  };
+  // 確保每一段唸完都有明確的句尾標點，讓朗讀在段落／小標題／想更深之間有自然的停頓，
+  // 而不是把不相干的句子直接黏在一起唸。
+  function ttsEnsureEnd(s) {
+    s = String(s || "").trim();
+    if (!s) return "";
+    if (!/[。！？；.!?;]$/.test(s)) s += (state.lang === "en" ? "." : "。");
+    return s;
+  }
   function chapterSpeakChunks(ch) {
-    var parts = [stripHtml(ch.intro)];
+    var d = D();
+    var bank = d.deeperBank || {};
+    var anchors = ch.deeper || {};
+    var lead = DEEPER_SPEAK_LEAD[state.lang] || DEEPER_SPEAK_LEAD.zh;
+    function deeperSpeak(ids) {
+      if (!ids || !ids.length) return "";
+      var out = "";
+      ids.forEach(function (id) {
+        var it = bank[id];
+        if (!it) return;
+        out += " " + lead + " " + ttsEnsureEnd(it.q) + " " + ttsEnsureEnd(it.a);
+      });
+      return out;
+    }
+    var parts = [ttsEnsureEnd(stripHtml(ch.intro))];
+    parts.push(deeperSpeak(anchors["intro"]));
     (ch.sections || []).forEach(function (s) {
-      if (s.heading) parts.push(s.heading);
-      parts.push(stripHtml(s.html));
+      if (s.heading) parts.push(ttsEnsureEnd(s.heading));
+      parts.push(ttsEnsureEnd(stripHtml(s.html)));
+      parts.push(deeperSpeak(anchors[String(s.no)]));
     });
-    return spkChunks(parts.join(" "));
+    return spkChunks(ttsPronounceFix(parts.join(" ")));
   }
   function ttsVoiceName() { return TTS_VOICE_BY_LANG[state.lang] || TTS_VOICE_BY_LANG.zh; }
   function yunFetch(piece) {
@@ -318,11 +460,7 @@
     } catch (e) {}
   }
 
-  function loadUser() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
+  function userDefaults() {
     return {
       readChapters: {},      // chId -> {openedAt, lastSection}
       completedChapters: {}, // chId -> completedAt
@@ -332,8 +470,23 @@
       declarations: [],      // {chId, chTitle, text, at}
       checklist: {},         // chId -> {itemId: bool}
       discussionDone: {},    // chId -> {qno: bool}
+      favorites: [],          // [{msgId, chId, chTitle, question, answer, at}] — saved Xiao Zhi replies
       theme: "auto",
     };
+  }
+  // Merge saved data over the defaults so a returning user's older localStorage blob
+  // (saved before a new field like `favorites` existed) doesn't end up missing it.
+  function loadUser() {
+    var defaults = userDefaults();
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var saved = JSON.parse(raw);
+        for (var k in defaults) { if (!(k in saved)) saved[k] = defaults[k]; }
+        return saved;
+      }
+    } catch (e) {}
+    return defaults;
   }
   function saveUser() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.user)); } catch (e) {}
@@ -370,6 +523,72 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+  // Small, dependency-free Markdown -> HTML renderer for AI chat replies
+  // (headers, bold/italic, blockquotes, tables, hr, lists, inline code).
+  // Everything is esc()'d first so no HTML/script can be injected via a reply.
+  function mdInline(s) {
+    s = esc(s);
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+    s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<i>$2</i>");
+    return s;
+  }
+  function mdToHtml(text) {
+    var lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+    var html = "", i = 0, inList = false, inTable = false;
+    function closeList() { if (inList) { html += "</ul>"; inList = false; } }
+    function closeTable() { if (inTable) { html += "</table>"; inTable = false; } }
+    while (i < lines.length) {
+      var line = lines[i];
+      var h = line.match(/^(#{1,4})\s+(.*)$/);
+      if (h) {
+        closeList(); closeTable();
+        var lvl = Math.min(h[1].length + 3, 6); // markdown h1-h4 -> html h4-h6, keeps chat-bubble scale sane
+        html += "<h" + lvl + ">" + mdInline(h[2].trim()) + "</h" + lvl + ">";
+        i++; continue;
+      }
+      if (/^\s*(-{3,}|\*{3,})\s*$/.test(line)) {
+        closeList(); closeTable();
+        html += "<hr>"; i++; continue;
+      }
+      var bq = line.match(/^>\s?(.*)$/);
+      if (bq) {
+        closeList(); closeTable();
+        var qlines = [bq[1]];
+        i++;
+        while (i < lines.length && /^>\s?/.test(lines[i])) { qlines.push(lines[i].replace(/^>\s?/, "")); i++; }
+        html += "<blockquote>" + qlines.map(mdInline).join("<br>") + "</blockquote>";
+        continue;
+      }
+      // table: a header row followed by a |---|---| separator row
+      if (/^\s*\|.*\|\s*$/.test(line) && lines[i + 1] && /^\s*\|?[\s:|-]+\|[\s:|-]*\|?\s*$/.test(lines[i + 1])) {
+        closeList();
+        var headCells = line.trim().replace(/^\||\|$/g, "").split("|").map(function (c) { return c.trim(); });
+        html += '<div class="msg-table-wrap"><table><thead><tr>' + headCells.map(function (c) { return "<th>" + mdInline(c) + "</th>"; }).join("") + "</tr></thead><tbody>";
+        i += 2;
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
+          var cells = lines[i].trim().replace(/^\||\|$/g, "").split("|").map(function (c) { return c.trim(); });
+          html += "<tr>" + cells.map(function (c) { return "<td>" + mdInline(c) + "</td>"; }).join("") + "</tr>";
+          i++;
+        }
+        html += "</tbody></table></div>";
+        continue;
+      }
+      var li = line.match(/^\s*[-*•]\s+(.*)$/);
+      if (li) {
+        closeTable();
+        if (!inList) { html += "<ul>"; inList = true; }
+        html += "<li>" + mdInline(li[1]) + "</li>";
+        i++; continue;
+      }
+      if (!line.trim()) { closeList(); closeTable(); i++; continue; }
+      closeList(); closeTable();
+      html += "<p>" + mdInline(line.trim()) + "</p>";
+      i++;
+    }
+    closeList(); closeTable();
+    return html || esc(text || "");
+  }
   function fmtDate(iso) {
     try {
       var dt = new Date(iso);
@@ -391,7 +610,14 @@
     return "none";
   }
 
-  window.L321 = { state: state, saveUser: saveUser, UI: UI };
+  window.L321 = {
+    state: state, saveUser: saveUser, UI: UI, mdToHtml: mdToHtml, ttsPronounceFix: ttsPronounceFix, chapterSpeakChunks: chapterSpeakChunks,
+    // getter (not a direct reference) because `chatSession`/`renderCompanion` are assigned further
+    // down this same IIFE, after this object literal already runs — a plain reference here would
+    // capture `undefined` for anything not yet hoisted-with-value at this point in the file.
+    getChatSession: function () { return chatSession; },
+    renderCompanion: function (view, chId) { return renderCompanion(view, chId); },
+  };
   window.L321_render = render;
   window.L321_navigate = navigate;
 
@@ -552,7 +778,7 @@
         }
         var opened = state.user.deeperOpened[id] ? " open" : "";
         out += '<details class="deeper" data-deeper-id="' + id + '"' + opened + '>';
-        out += '<summary><span class="q">' + esc(it.q) + '</span></summary>';
+        out += '<summary><span class="q">' + esc(it.q) + '</span><span class="chev" aria-hidden="true"></span></summary>';
         out += '<div class="a"><span class="tierbadge tier' + it.tier + '">' + esc(t().tier[it.tier]) + '</span>';
         out += '<div>' + esc(it.a) + '</div>';
         out += '<div class="refs">' + esc(it.refs) + '</div></div>';
@@ -997,14 +1223,16 @@
   var chatSession = { messages: [] };
   var XIAOZHI_ENDPOINT = "https://xiaozhi-proxy.spch321.workers.dev";
   var pendingAsk = null; // set by "ask Xiaozhi about this line" from a highlighted paragraph
+  var msgIdSeq = 0;
+  function newMsgId() { msgIdSeq++; return "m" + Date.now().toString(36) + msgIdSeq; }
 
   function companionSystemPrompt(chId) {
     var d = D();
     var ch = chId ? d.chapters[chId] : null;
     var base = {
-      zh: "你是「小智」，《321建造 教會領導力》App內的AI陪讀，人設是一位謙卑、有盼望、充滿愛心的「321領導力教練」。準則：①任何回答最終必須指向耶穌的榜樣、聖經的准則、聖靈的引導，不能只停留在321術語的自我循環論證；②回答涉及神學推論時，誠實標示層級——A為聖經明文教導，B為可討論的神學推論需說明「這是我的理解，歡迎與牧者再確認」，C為321的應用性語言需說明「這是321的應用性理解」；③遇到讀者具體人生抉擇（換工作、婚姻、離開教會等），引導讀者用321原則自己思考、鼓勵與屬靈父母／小組尋求印證，不直接替讀者下判斷；④所有經文引用一律使用和合本繁體中文；⑤語氣謙卑、盼望、帶著愛心，避免說教與居高臨下，用心不用腦。",
-      zs: "你是「小智」，《321建造 教会领导力》App内的AI陪读，人设是一位谦卑、有盼望、充满爱心的「321领导力教练」。准则：①任何回答最终必须指向耶稣的榜样、圣经的准则、圣灵的引导，不能只停留在321术语的自我循环论证；②回答涉及神学推论时，诚实标示层级——A为圣经明文教导，B为可讨论的神学推论需说明「这是我的理解，欢迎与牧者再确认」，C为321的应用性语言需说明「这是321的应用性理解」；③遇到读者具体人生抉择，引导读者用321原则自己思考、鼓励与属灵父母／小组寻求印证，不直接替读者下判断；④所有经文引用一律使用和合本简体中文；⑤语气谦卑、盼望、带着爱心，避免说教与居高临下。",
-      en: "You are 'Xiao Zhi,' the AI companion inside the Building on 321: Church Leadership app — a humble, hopeful, loving '321 Leadership Coach.' Guidelines: (1) Every answer must ultimately point to Jesus as example, Scripture as standard, and the Holy Spirit as guide — never stay circular within 321's own vocabulary; (2) when reasoning theologically, honestly mark confidence: A = explicit Scripture teaching, B = a reasoned theological inference — say 'this is my understanding, please confirm with your pastor,' C = 321's own applied language — say 'this is 321's applied framing'; (3) for concrete life decisions (a job change, marriage, leaving a church), guide the reader to think it through using 321's principles and to seek confirmation from spiritual parents/small group — never decide for them; (4) quote Scripture using the ESV (or WEB where noted) for English; (5) tone: humble, hopeful, loving — never preachy or condescending.",
+      zh: "你是「小智」，《321建造 教會領導力》App內的AI陪讀，人設是一位謙卑、有盼望、充滿愛心的「321領導力教練」。準則：①任何回答最終必須指向耶穌的榜樣、聖經的准則、聖靈的引導，不能只停留在321術語的自我循環論證；②回答涉及神學推論時，誠實標示層級——A為聖經明文教導，B為可討論的神學推論需說明「這是我的理解，歡迎與牧者再確認」，C為321的應用性語言需說明「這是321的應用性理解」；③遇到讀者具體人生抉擇（換工作、婚姻、離開教會等），引導讀者用321原則自己思考、鼓勵與屬靈父母／小組尋求印證，不直接替讀者下判斷；④所有經文引用一律使用和合本繁體中文；⑤語氣謙卑、盼望、帶著愛心，避免說教與居高臨下，用心不用腦；⑥這是手機聊天介面，版面要美觀、簡單、易讀：整則回覆整體字數盡量精簡（一般問題約150-250字為佳，除非讀者明確要求詳細說明），標題只在真的需要分段時偶爾使用一個「##」等級的小標題，不要每段都加標題，不用把全部內容都塞進表格，優先用簡短的段落與條列，重點文字適度加粗即可，避免過度使用巢狀項目符號或多層表格。",
+      zs: "你是「小智」，《321建造 教会领导力》App内的AI陪读，人设是一位谦卑、有盼望、充满爱心的「321领导力教练」。准则：①任何回答最终必须指向耶稣的榜样、圣经的准则、圣灵的引导，不能只停留在321术语的自我循环论证；②回答涉及神学推论时，诚实标示层级——A为圣经明文教导，B为可讨论的神学推论需说明「这是我的理解，欢迎与牧者再确认」，C为321的应用性语言需说明「这是321的应用性理解」；③遇到读者具体人生抉择，引导读者用321原则自己思考、鼓励与属灵父母／小组寻求印证，不直接替读者下判断；④所有经文引用一律使用和合本简体中文；⑤语气谦卑、盼望、带着爱心，避免说教与居高临下；⑥这是手机聊天界面，版面要美观、简单、易读：整则回复整体字数尽量精简（一般问题约150-250字为佳，除非读者明确要求详细说明），标题只在真的需要分段时偶尔使用一个「##」等级的小标题，不要每段都加标题，不用把全部内容都塞进表格，优先用简短的段落与条列，重点文字适度加粗即可，避免过度使用嵌套项目符号或多层表格。",
+      en: "You are 'Xiao Zhi,' the AI companion inside the Building on 321: Church Leadership app — a humble, hopeful, loving '321 Leadership Coach.' Guidelines: (1) Every answer must ultimately point to Jesus as example, Scripture as standard, and the Holy Spirit as guide — never stay circular within 321's own vocabulary; (2) when reasoning theologically, honestly mark confidence: A = explicit Scripture teaching, B = a reasoned theological inference — say 'this is my understanding, please confirm with your pastor,' C = 321's own applied language — say 'this is 321's applied framing'; (3) for concrete life decisions (a job change, marriage, leaving a church), guide the reader to think it through using 321's principles and to seek confirmation from spiritual parents/small group — never decide for them; (4) quote Scripture using the ESV (or WEB where noted) for English; (5) tone: humble, hopeful, loving — never preachy or condescending; (6) this is a mobile chat interface — keep replies clean, simple and easy to read: keep the overall length concise (roughly 100-180 words for an ordinary question, unless the reader explicitly asks for more depth), use at most an occasional small '##'-level heading only when a real section break helps (never one per paragraph), don't force everything into a table, prefer short paragraphs and simple bullet lists, use bold sparingly for genuinely key words, and avoid deeply nested lists or multi-level tables.",
     }[state.lang];
     if (ch) {
       var ctx = state.lang === "en"
@@ -1029,8 +1257,24 @@
     if (!chatSession.messages.length) {
       html += '<div class="msg ai">' + esc(t().companionIntro) + '</div>';
     }
-    chatSession.messages.forEach(function (m) {
-      html += '<div class="msg ' + (m.role === "user" ? "user" : "ai") + '">' + esc(m.text) + '</div>';
+    chatSession.messages.forEach(function (m, mi) {
+      if (m.role === "user") {
+        html += '<div class="msg user">' + esc(m.text) + '</div>';
+        return;
+      }
+      if (m.pending) {
+        html += '<div class="msg ai">' + esc(m.text) + '</div>';
+        return;
+      }
+      var isFav = !!(m.id && state.user.favorites.some(function (f) { return f.msgId === m.id; }));
+      html += '<div class="msg ai" data-mi="' + mi + '">';
+      html += '<div class="msg-body' + (m.collapsed !== false ? " clamped" : "") + '">' + mdToHtml(m.text) + '</div>';
+      html += '<div class="msg-actions">';
+      html += '<button type="button" class="msg-act msg-collapse" data-mi="' + mi + '" hidden></button>';
+      html += '<button type="button" class="msg-act msg-fav' + (isFav ? " on" : "") + '" data-mi="' + mi + '">' + (isFav ? "★ " + esc(t().msgSaved) : "☆ " + esc(t().msgSave)) + '</button>';
+      html += '<button type="button" class="msg-act msg-del" data-mi="' + mi + '">🗑 ' + esc(t().msgDelete) + '</button>';
+      html += '</div>';
+      html += '</div>';
     });
     html += '</div>';
 
@@ -1060,6 +1304,50 @@
 
     var log = qs("#chatlog", view);
     log.scrollTop = log.scrollHeight;
+
+    // A long AI reply's "展開全部/收合" toggle only appears if the reply actually overflows
+    // the collapsed height — measured against the real rendered content (tables/headers and
+    // all), not a character-count guess, so it works no matter what the reply contains.
+    qsa(".msg.ai[data-mi]", log).forEach(function (bubble) {
+      var mi = parseInt(bubble.getAttribute("data-mi"), 10);
+      var m = chatSession.messages[mi];
+      var body = qs(".msg-body", bubble);
+      var btn = qs(".msg-collapse", bubble);
+      if (!m || !body || !btn) return;
+      body.classList.remove("clamped");
+      var full = body.scrollHeight;
+      if (full > 194) {
+        var collapsed = m.collapsed !== false;
+        m.collapsed = collapsed;
+        body.classList.toggle("clamped", collapsed);
+        btn.hidden = false;
+        btn.textContent = collapsed ? t().msgExpand : t().msgCollapse;
+      } else {
+        m.collapsed = false;
+        btn.hidden = true;
+      }
+    });
+    log.addEventListener("click", function (e) {
+      var collapseBtn = e.target.closest(".msg-collapse");
+      var favBtn = e.target.closest(".msg-fav");
+      var delBtn = e.target.closest(".msg-del");
+      if (collapseBtn) {
+        var m1 = chatSession.messages[parseInt(collapseBtn.getAttribute("data-mi"), 10)];
+        if (m1) { m1.collapsed = !m1.collapsed; renderCompanion(view, chId); }
+        return;
+      }
+      if (favBtn) {
+        toggleFavorite(parseInt(favBtn.getAttribute("data-mi"), 10), chId2);
+        renderCompanion(view, chId);
+        return;
+      }
+      if (delBtn) {
+        if (!window.confirm(t().msgDeleteConfirm)) return;
+        chatSession.messages.splice(parseInt(delBtn.getAttribute("data-mi"), 10), 1);
+        renderCompanion(view, chId);
+        return;
+      }
+    });
 
     var chatInEl = qs("#chatIn", view);
     if (pendingAsk) {
@@ -1108,32 +1396,61 @@
     return lastId;
   }
 
+  function toggleFavorite(mi, chId2) {
+    var m = chatSession.messages[mi];
+    if (!m || m.role !== "ai" || m.pending) return;
+    if (!m.id) m.id = newMsgId();
+    var existingIdx = state.user.favorites.findIndex(function (f) { return f.msgId === m.id; });
+    if (existingIdx >= 0) {
+      state.user.favorites.splice(existingIdx, 1);
+    } else {
+      var d = D();
+      var ch = chId2 ? d.chapters[chId2] : null;
+      var question = null;
+      for (var i = mi - 1; i >= 0; i--) {
+        if (chatSession.messages[i].role === "user") { question = chatSession.messages[i].text; break; }
+      }
+      state.user.favorites.push({
+        msgId: m.id, chId: chId2 || null, chTitle: ch ? (ch.numFull + "　" + ch.title) : "",
+        question: question, answer: m.text, at: Date.now(),
+      });
+    }
+    saveUser();
+  }
+
   function sendChat(chId) {
     var ta = qs("#chatIn");
     var text = (ta.value || "").trim();
     if (!text) return;
-    chatSession.messages.push({ role: "user", text: text });
+    chatSession.messages.push({ role: "user", text: text, id: newMsgId() });
     ta.value = "";
     renderCompanion(qs("#view"), chId);
     var log = qs("#chatlog"); if (log) log.scrollTop = log.scrollHeight;
 
     if (!navigator.onLine) {
-      chatSession.messages.push({ role: "ai", text: t().companionNeedNet });
+      chatSession.messages.push({ role: "ai", text: t().companionNeedNet, id: newMsgId() });
       renderCompanion(qs("#view"), chId);
       return;
     }
 
-    var thinkingIdx = chatSession.messages.length;
-    chatSession.messages.push({ role: "ai", text: "…" });
+    var thinkingId = newMsgId();
+    chatSession.messages.push({ role: "ai", text: "…", id: thinkingId, pending: true });
     renderCompanion(qs("#view"), chId);
 
     var payload = {
       system: companionSystemPrompt(chId),
       messages: chatSession.messages
-        .filter(function (m, i) { return i !== thinkingIdx; })
+        .filter(function (m) { return m.id !== thinkingId; })
         .slice(-12)
         .map(function (m) { return { role: m.role === "user" ? "user" : "assistant", content: m.text }; }),
     };
+
+    // Look up the "…" placeholder by id (not array index) when the reply lands, since the
+    // user may have deleted an earlier message in the meantime and shifted every index.
+    function findMsgIdxById(id) {
+      for (var i = 0; i < chatSession.messages.length; i++) { if (chatSession.messages[i].id === id) return i; }
+      return -1;
+    }
 
     fetch(XIAOZHI_ENDPOINT, {
       method: "POST",
@@ -1144,11 +1461,13 @@
       return r.json();
     }).then(function (data) {
       var reply = extractReplyText(data);
-      chatSession.messages[thinkingIdx] = { role: "ai", text: reply || (state.lang === "en" ? "(no reply)" : "（沒有收到回覆）") };
+      var idx = findMsgIdxById(thinkingId);
+      if (idx >= 0) chatSession.messages[idx] = { role: "ai", text: reply || (state.lang === "en" ? "(no reply)" : "（沒有收到回覆）"), id: thinkingId };
       renderCompanion(qs("#view"), chId);
       var log2 = qs("#chatlog"); if (log2) log2.scrollTop = log2.scrollHeight;
     }).catch(function (err) {
-      chatSession.messages[thinkingIdx] = { role: "ai", text: (state.lang === "en" ? "Connection error. Please try again." : "連線發生問題，請稍後再試。") };
+      var idx2 = findMsgIdxById(thinkingId);
+      if (idx2 >= 0) chatSession.messages[idx2] = { role: "ai", text: (state.lang === "en" ? "Connection error. Please try again." : "連線發生問題，請稍後再試。"), id: thinkingId };
       renderCompanion(qs("#view"), chId);
     });
   }
@@ -1206,6 +1525,21 @@
     }
     html += '</div>';
 
+    html += '<div class="section-title">' + esc(t().meFavorites) + '</div><div class="card">';
+    var favs = state.user.favorites.slice().reverse();
+    if (!favs.length) {
+      html += '<div class="empty">' + esc(t().meNoFavorites) + '</div>';
+    } else {
+      favs.slice(0, 60).forEach(function (f) {
+        html += '<div class="favitem">';
+        if (f.question) html += '<div class="fq">' + esc(f.question) + '</div>';
+        html += '<div class="fa">' + mdToHtml(f.answer) + '</div>';
+        html += '<div class="m"><span>' + esc(f.chTitle || "") + (f.chTitle ? " · " : "") + fmtDate(f.at) + '</span><button type="button" class="favdel" data-favid="' + esc(f.msgId) + '">🗑</button></div>';
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+
     html += '<div class="section-title">' + esc(t().meSettings) + '</div><div class="card">';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">';
     html += '<span>' + (state.lang === "en" ? "Theme" : "外觀") + '</span>';
@@ -1219,6 +1553,14 @@
         state.user.theme = b.getAttribute("data-theme");
         saveUser();
         applyTheme();
+        renderMe(view);
+      });
+    });
+    qsa(".favdel", view).forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-favid");
+        state.user.favorites = state.user.favorites.filter(function (f) { return f.msgId !== id; });
+        saveUser();
         renderMe(view);
       });
     });
