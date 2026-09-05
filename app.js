@@ -38,7 +38,7 @@
       wakeLockOn: "螢幕保持喚醒", exitPrompter: "結束", prev: "上一題", next: "下一題",
       backHome: "首頁", backToc: "目錄", readAloud: "朗讀", pauseAloud: "暫停", resumeAloud: "繼續朗讀", stopAloud: "停止", ttsUnsupported: "這台裝置不支援語音朗讀", ttsLoading: "準備語音中…", fontSizeLabel: "調整字級大小",
       hlAddNote: "加筆記", hlEditNote: "編輯筆記", hlAskXz: "問小智", hlNotePlaceholder: "寫下你的領受或問題…", hlSave: "儲存", hlCancel: "取消", askAboutLine: "關於這一段：「", askAboutLineEnd: "」——",
-      hlSheetTitle: "✍️ 寫下你的領受", hlReflectionPlaceholder: "這句話帶給你什麼領受、感動，或聖靈的提醒？寫下來，把焦點對準耶穌……", hlSaveReflection: "儲存領受", hlClearNote: "刪除領受", hlRemoveHighlight: "移除畫線",
+      hlSheetTitle: "✍️ 寫下你的領受", hlReflectionPlaceholder: "這句話帶給你什麼領受、感動，或聖靈的提醒？寫下來，把焦點對準耶穌……", hlSaveReflection: "儲存領受", hlClearNote: "刪除領受", hlRemoveHighlight: "移除畫線", hlColorLabel: "畫線顏色",
       hlHint: "💡 讀到聖靈光照、有感動的句子，點一下就能畫線；畫線後再點一下可以寫下你的領受。",
       myths: "領導迷思破解", tracksTitle: "關鍵詞軌跡", occurrences: "次", chaptersSpanned: "課出現",
       checklistTitle: "教導誠信檢核", checklistPickChapter: "選擇要檢核的課別", checklistDone: "已完成",
@@ -74,7 +74,7 @@
       wakeLockOn: "萤幕保持唤醒", exitPrompter: "结束", prev: "上一题", next: "下一题",
       backHome: "首页", backToc: "目录", readAloud: "朗读", pauseAloud: "暂停", resumeAloud: "继续朗读", stopAloud: "停止", ttsUnsupported: "这台装置不支持语音朗读", ttsLoading: "准备语音中…", fontSizeLabel: "调整字级大小",
       hlAddNote: "加笔记", hlEditNote: "编辑笔记", hlAskXz: "问小智", hlNotePlaceholder: "写下你的领受或问题…", hlSave: "储存", hlCancel: "取消", askAboutLine: "关于这一段：「", askAboutLineEnd: "」——",
-      hlSheetTitle: "✍️ 写下你的领受", hlReflectionPlaceholder: "这句话带给你什么领受、感动，或圣灵的提醒？写下来，把焦点对准耶稣……", hlSaveReflection: "储存领受", hlClearNote: "删除领受", hlRemoveHighlight: "移除画线",
+      hlSheetTitle: "✍️ 写下你的领受", hlReflectionPlaceholder: "这句话带给你什么领受、感动，或圣灵的提醒？写下来，把焦点对准耶稣……", hlSaveReflection: "储存领受", hlClearNote: "删除领受", hlRemoveHighlight: "移除画线", hlColorLabel: "画线颜色",
       hlHint: "💡 读到圣灵光照、有感动的句子，点一下就能画线；画线后再点一下可以写下你的领受。",
       myths: "领导迷思破解", tracksTitle: "关键词轨迹", occurrences: "次", chaptersSpanned: "课出现",
       checklistTitle: "教导诚信检核", checklistPickChapter: "选择要检核的课别", checklistDone: "已完成",
@@ -110,7 +110,7 @@
       wakeLockOn: "Screen kept awake", exitPrompter: "Exit", prev: "Previous", next: "Next",
       backHome: "Home", backToc: "Contents", readAloud: "Read Aloud", pauseAloud: "Pause", resumeAloud: "Resume", stopAloud: "Stop", ttsUnsupported: "This device does not support read-aloud", ttsLoading: "Preparing audio…", fontSizeLabel: "Adjust font size",
       hlAddNote: "Add Note", hlEditNote: "Edit Note", hlAskXz: "Ask Sage AI", hlNotePlaceholder: "Write your reflection or question…", hlSave: "Save", hlCancel: "Cancel", askAboutLine: "About this line: “", askAboutLineEnd: "” — ",
-      hlSheetTitle: "✍️ Write Your Reflection", hlReflectionPlaceholder: "What reflection, feeling, or prompting from the Holy Spirit does this line stir in you? Write it down, and keep your focus on Jesus……", hlSaveReflection: "Save Reflection", hlClearNote: "Clear Reflection", hlRemoveHighlight: "Remove Highlight",
+      hlSheetTitle: "✍️ Write Your Reflection", hlReflectionPlaceholder: "What reflection, feeling, or prompting from the Holy Spirit does this line stir in you? Write it down, and keep your focus on Jesus……", hlSaveReflection: "Save Reflection", hlClearNote: "Clear Reflection", hlRemoveHighlight: "Remove Highlight", hlColorLabel: "Highlight Color",
       hlHint: "💡 When a line stirs something in you, tap it to highlight it; tap the highlighted line again to write your reflection.",
       myths: "Leadership Myths, Busted", tracksTitle: "Keyword Tracker", occurrences: "occurrences", chaptersSpanned: "lessons",
       checklistTitle: "Teaching Integrity Check", checklistPickChapter: "Choose a lesson to check", checklistDone: "Completed",
@@ -205,6 +205,26 @@
     ],
   };
   var TTS_VOICE_DEFAULT = { zh: "yunjhe", zs: "yunfan", en: "andrew" };
+
+  // ---------------------------------------------------------------
+  // Highlight colors — picked from the "顏色" swatch row inside the reflection sheet, stored
+  // per-highlight as h.color (default "gold" for both new highlights and any highlight saved
+  // before this feature existed). `dot` is the swatch button's own fixed color (same in light
+  // and dark mode, like a real highlighter's cap color); the actual soft background tint shown
+  // behind highlighted text is theme-aware and lives in CSS as --hlbg-<id> (gold reuses the
+  // existing --gold-soft var rather than a new one).
+  var HL_COLORS = [
+    { id: "gold", dot: "#D9A73D" },
+    { id: "green", dot: "#6FAE71" },
+    { id: "blue", dot: "#6C93D1" },
+    { id: "pink", dot: "#E58FA0" },
+    { id: "purple", dot: "#A48AC9" },
+  ];
+  var HL_COLOR_NAMES = {
+    zh: { gold: "金", green: "綠", blue: "藍", pink: "粉", purple: "紫" },
+    zs: { gold: "金", green: "绿", blue: "蓝", pink: "粉", purple: "紫" },
+    en: { gold: "Gold", green: "Green", blue: "Blue", pink: "Pink", purple: "Purple" },
+  };
 
   // ---------------------------------------------------------------
   // TTS pronunciation fix-up ("破音字" homophone substitution) — applied ONLY
@@ -374,6 +394,90 @@
   var BIBLE_ALT_ZH = bibleBooksAlt(BIBLE_BOOKS_ZH);
   var BIBLE_ALT_ZS = bibleBooksAlt(BIBLE_BOOKS_ZS);
   var BIBLE_ALT_EN = bibleBooksAlt(BIBLE_BOOKS_EN);
+  // ---------------------------------------------------------------
+  // Canonical book-name lookup (alias/abbreviation → full name), built directly from the same
+  // flat BIBLE_BOOKS_ZH/ZS arrays above so it can never drift out of sync with them. The flat
+  // arrays are laid out as consecutive groups of [fullName, abbrev, abbrev...] — 61 books with
+  // exactly 1 abbreviation, then 約翰一/二/三書 (约翰一/二/三书) with 2 abbreviations each, then
+  // 猶大書/啟示錄 (犹大书/启示录) with 1 abbreviation each — 66 books, 135 entries total.
+  var BIBLE_BOOK_GROUP_SIZES = (function () {
+    var sizes = [];
+    for (var i = 0; i < 61; i++) sizes.push(2);
+    sizes.push(3, 3, 3);
+    sizes.push(2, 2);
+    return sizes;
+  })();
+  function buildBookCanon(flatArr) {
+    var map = {}, idx = 0;
+    BIBLE_BOOK_GROUP_SIZES.forEach(function (sz) {
+      var full = flatArr[idx];
+      for (var j = 0; j < sz; j++) map[flatArr[idx + j]] = full;
+      idx += sz;
+    });
+    return map;
+  }
+  var BIBLE_CANON_ZH = buildBookCanon(BIBLE_BOOKS_ZH);
+  var BIBLE_CANON_ZS = buildBookCanon(BIBLE_BOOKS_ZS);
+  // Arabic-numeral → spoken Chinese numeral (covers Bible chapter/verse numbers, max ~176).
+  function numToZh(n) {
+    n = parseInt(n, 10);
+    if (!isFinite(n)) return String(n);
+    var d = "零一二三四五六七八九";
+    if (n === 0) return d[0];
+    if (n < 10) return d[n];
+    if (n < 20) return "十" + (n % 10 ? d[n % 10] : "");
+    if (n < 100) {
+      var tens = Math.floor(n / 10), ones = n % 10;
+      return d[tens] + "十" + (ones ? d[ones] : "");
+    }
+    var hundreds = Math.floor(n / 100), rem = n % 100;
+    var out = d[hundreds] + "百";
+    if (rem === 0) return out;
+    if (rem < 10) return out + "零" + d[rem];
+    var tens2 = Math.floor(rem / 10), ones2 = rem % 10;
+    if (tens2 === 1) return out + "一十" + (ones2 ? d[ones2] : "");
+    return out + d[tens2] + "十" + (ones2 ? d[ones2] : "");
+  }
+  // Expands abbreviated scripture citations (as 小智/Sage AI's freeform replies tend to write
+  // them, e.g. "太28:19-20" or "约3:16") into the fully spoken Chinese form ("馬太福音二十八章
+  // 十九到二十節" / "约翰福音三章十六节") — the book content's own 55 fixed chapters never use
+  // this abbreviated arabic-numeral notation (already verified: 0 occurrences in either corpus),
+  // so this only ever fires on the AI companion's dynamically generated text. Runs AFTER
+  // stripScriptureRefParens() on purpose: that function only recognizes the already-fully-spelled-
+  // out "書卷名+中文數字+章...節" form used by the book itself, so it correctly leaves this
+  // abbreviated colon/arabic form untouched — if the order were reversed, the freshly-expanded
+  // citation would then look exactly like the book's own skippable footnote citations and get
+  // silently stripped instead of read aloud.
+  function expandScriptureRefs(text, lang) {
+    if (lang !== "zh" && lang !== "zs") return text;
+    var alt = lang === "zs" ? BIBLE_ALT_ZS : BIBLE_ALT_ZH;
+    var canon = lang === "zs" ? BIBLE_CANON_ZS : BIBLE_CANON_ZH;
+    var jie = lang === "zs" ? "节" : "節";
+    if (!alt) return text;
+    var out = String(text || "");
+    var reColon = new RegExp("(" + alt + ")\\s*([0-9]{1,3})\\s*[:：]\\s*([0-9]{1,3})(?:\\s*[-–~]\\s*([0-9]{1,3}))?", "g");
+    var reZhang = new RegExp("(" + alt + ")\\s*([0-9]{1,3})\\s*章\\s*([0-9]{1,3})(?:\\s*[至到\\-–~]\\s*([0-9]{1,3}))?\\s*" + jie + "?", "g");
+    function expand(m, book, chap, v1, v2) {
+      var full = canon[book] || book;
+      var s = full + numToZh(chap) + "章" + numToZh(v1);
+      if (v2) s += "到" + numToZh(v2);
+      return s + jie;
+    }
+    out = out.replace(reColon, expand);
+    out = out.replace(reZhang, expand);
+    return out;
+  }
+  // Strips emoji (and the invisible variation-selector/ZWJ codepoints that often ride along with
+  // them) before TTS — 小智/Sage AI's replies sometimes end a sentence with a friendly emoji
+  // (😊🙏✨❤️👍 etc.), which TTS engines otherwise mangle into an awkward spoken word/noise.
+  // Deliberately narrow ranges (BMP Dingbats/Misc Symbols/Misc Symbols&Arrows + the supplementary-
+  // plane pictograph blocks used by nearly all emoji) so this never touches meaningful punctuation
+  // or symbols actually used in the book's own text (e.g. "→" U+2192 is in the Arrows block,
+  // U+2190–21FF, which is intentionally NOT included here).
+  var EMOJI_RE = /[\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D]|[\uD83C-\uD83E][\uDC00-\uDFFF]/g;
+  function stripEmoji(text) {
+    return String(text || "").replace(EMOJI_RE, "").replace(/[ \t]{2,}/g, " ");
+  }
   function stripScriptureRefParens(text, lang) {
     var alt = lang === "en" ? BIBLE_ALT_EN : (lang === "zs" ? BIBLE_ALT_ZS : BIBLE_ALT_ZH);
     if (!alt) return text;
@@ -397,7 +501,9 @@
   function ttsPronounceFix(text) {
     if (!text) return text;
     var out = String(text);
+    out = stripEmoji(out);
     out = stripScriptureRefParens(out, state.lang);
+    out = expandScriptureRefs(out, state.lang);
     if (state.lang === "zh" || state.lang === "zs") {
       TTS_DIGIT_FIXES.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
       TTS_WEI_DA_FIX.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
@@ -1237,6 +1343,7 @@
       noteEl.className = "hl-note";
       noteEl.setAttribute("data-note-key", key);
       noteEl.setAttribute("data-note-idx", idx);
+      noteEl.setAttribute("data-color", h.color || "gold");
       noteEl.textContent = "📝 " + h.note;
       var anchor = p, sib = p.nextElementSibling;
       while (sib && sib.classList && sib.classList.contains("hl-note") && parseInt(sib.getAttribute("data-note-idx"), 10) < idx) {
@@ -1271,11 +1378,19 @@
       closeHlSheet();
       var sentence = span.textContent.slice(0, 200);
       var p = span.parentNode;
+      var curColor = h.color || "gold";
+      var colorNames = HL_COLOR_NAMES[state.lang] || HL_COLOR_NAMES.zh;
+      var colorsHtml = '<div class="hlsheet-colorrow">' +
+        '<span class="hlsheet-colorlabel">' + esc(t().hlColorLabel) + '</span>' +
+        '<div class="hlsheet-colors">' + HL_COLORS.map(function (c) {
+          return '<button type="button" class="hlswatch' + (c.id === curColor ? " active" : "") + '" data-color="' + c.id + '" style="background:' + c.dot + '" aria-label="' + esc(colorNames[c.id] || c.id) + '"></button>';
+        }).join("") + '</div></div>';
       var mask = document.createElement("div");
       mask.className = "hlsheet-mask";
       mask.innerHTML = '<div class="hlsheet-card">' +
         '<div class="hlsheet-title">' + esc(t().hlSheetTitle) + '</div>' +
         '<div class="hlsheet-quote">' + esc(sentence) + '</div>' +
+        colorsHtml +
         '<textarea class="hlsheet-ta" placeholder="' + esc(t().hlReflectionPlaceholder) + '">' + esc(h.note || "") + '</textarea>' +
         '<div class="hlsheet-acts">' +
         '<button type="button" data-act="save" class="btn gold">' + esc(t().hlSaveReflection) + '</button>' +
@@ -1290,6 +1405,23 @@
       mask.addEventListener("click", function (e) { if (e.target === mask) closeHlSheet(); });
       var ta = mask.querySelector(".hlsheet-ta");
       setTimeout(function () { ta.focus(); }, 60);
+      // color picker — applies immediately on tap (a categorization choice, not something that
+      // needs a separate "save" step), and updates the sentence's highlight + any of its notes
+      // on screen right away so the reader sees the new color without reopening the sheet.
+      Array.prototype.forEach.call(mask.querySelectorAll(".hlswatch"), function (btn) {
+        btn.addEventListener("click", function () {
+          var color = btn.getAttribute("data-color");
+          var hh = findHighlight(sec, pidx, idx);
+          if (hh) { hh.color = color; saveUser(); }
+          span.setAttribute("data-color", color);
+          var key = hlNoteKey(sec, pidx, idx);
+          var noteEl = p.parentNode.querySelector('.hl-note[data-note-key="' + key + '"]');
+          if (noteEl) noteEl.setAttribute("data-color", color);
+          Array.prototype.forEach.call(mask.querySelectorAll(".hlswatch"), function (b) {
+            b.classList.toggle("active", b === btn);
+          });
+        });
+      });
       mask.querySelector('[data-act="save"]').addEventListener("click", function () {
         var hh = findHighlight(sec, pidx, idx);
         if (hh) { hh.note = (ta.value || "").trim(); saveUser(); }
@@ -1341,7 +1473,11 @@
         span.setAttribute("data-sec", sec);
         span.setAttribute("data-pidx", pidx);
         span.setAttribute("data-idx", idx);
-        if (findHighlight(sec, pidx, idx)) span.setAttribute("data-hl", "1");
+        var existingHl = findHighlight(sec, pidx, idx);
+        if (existingHl) {
+          span.setAttribute("data-hl", "1");
+          span.setAttribute("data-color", existingHl.color || "gold");
+        }
         nodes.forEach(function (n) { span.appendChild(n); });
         p.appendChild(span);
         span.addEventListener("click", function (e) {
@@ -1351,8 +1487,9 @@
           if (existingIdx >= 0) {
             openHlSheet(span, sec, pidx, idx);
           } else {
-            arr.push({ sec: sec, pidx: pidx, idx: idx, text: span.textContent.slice(0, 200), at: Date.now(), lang: state.lang, chId: chId, chTitle: ch.title });
+            arr.push({ sec: sec, pidx: pidx, idx: idx, text: span.textContent.slice(0, 200), at: Date.now(), lang: state.lang, chId: chId, chTitle: ch.title, color: "gold" });
             span.setAttribute("data-hl", "1");
+            span.setAttribute("data-color", "gold");
             saveUser();
           }
         });
