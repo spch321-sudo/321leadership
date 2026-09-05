@@ -8,6 +8,8 @@
   var STORAGE_KEY = "l321_user_v1";
   var LANG_KEY = "l321_lang";
   var THEME_KEY = "l321_theme";
+  var FONT_KEY = "l321_font";
+  var FONT_CLASS = ["", "fs-lg", "fs-xl"];
 
   // ---------------------------------------------------------------
   // i18n (chrome / UI strings — content itself comes from data files)
@@ -34,11 +36,14 @@
       writeDeclaration: "寫下你的宣告", saveDecl: "儲存宣告", declSaved: "已儲存",
       startPrompterMsg: "小組帶領模式", phase: "階段", question: "題", closing: "收尾",
       wakeLockOn: "螢幕保持喚醒", exitPrompter: "結束", prev: "上一題", next: "下一題",
+      backHome: "首頁", backToc: "目錄", readAloud: "朗讀", pauseAloud: "暫停", resumeAloud: "繼續朗讀", stopAloud: "停止", ttsUnsupported: "這台裝置不支援語音朗讀", ttsLoading: "準備語音中…", fontSizeLabel: "調整字級大小",
+      hlAddNote: "加筆記", hlEditNote: "編輯筆記", hlAskXz: "問小智", hlNotePlaceholder: "寫下你的領受或問題…", hlSave: "儲存", hlCancel: "取消", askAboutLine: "關於這一段：「", askAboutLineEnd: "」——",
       myths: "領導迷思破解", tracksTitle: "關鍵詞軌跡", occurrences: "次", chaptersSpanned: "課出現",
       checklistTitle: "教導誠信檢核", checklistPickChapter: "選擇要檢核的課別", checklistDone: "已完成",
       journeyTitle: "321旅程地圖", journeyNote: "",
       tier: { A: "A｜聖經明文教導", B: "B｜可討論的神學推論", C: "C｜321應用性表達" },
       part: "第", of: "，共",
+      companionQsToggle: "💡 範例問題", companionQsHide: "收起範例問題", companionQsHint: "點一下問題，直接問小智",
     },
     zs: {
       brand: "321领导力", tabToday: "今日", tabCourse: "课程", tabTools: "工具", tabCompanion: "陪读", tabMe: "我的",
@@ -61,11 +66,14 @@
       writeDeclaration: "写下你的宣告", saveDecl: "储存宣告", declSaved: "已储存",
       startPrompterMsg: "小组带领模式", phase: "阶段", question: "题", closing: "收尾",
       wakeLockOn: "萤幕保持唤醒", exitPrompter: "结束", prev: "上一题", next: "下一题",
+      backHome: "首页", backToc: "目录", readAloud: "朗读", pauseAloud: "暂停", resumeAloud: "继续朗读", stopAloud: "停止", ttsUnsupported: "这台装置不支持语音朗读", ttsLoading: "准备语音中…", fontSizeLabel: "调整字级大小",
+      hlAddNote: "加笔记", hlEditNote: "编辑笔记", hlAskXz: "问小智", hlNotePlaceholder: "写下你的领受或问题…", hlSave: "储存", hlCancel: "取消", askAboutLine: "关于这一段：「", askAboutLineEnd: "」——",
       myths: "领导迷思破解", tracksTitle: "关键词轨迹", occurrences: "次", chaptersSpanned: "课出现",
       checklistTitle: "教导诚信检核", checklistPickChapter: "选择要检核的课别", checklistDone: "已完成",
       journeyTitle: "321旅程地图", journeyNote: "",
       tier: { A: "A｜圣经明文教导", B: "B｜可讨论的神学推论", C: "C｜321应用性表达" },
       part: "第", of: "，共",
+      companionQsToggle: "💡 范例问题", companionQsHide: "收起范例问题", companionQsHint: "点一下问题，直接问小智",
     },
     en: {
       brand: "321 Leadership", tabToday: "Today", tabCourse: "Lessons", tabTools: "Tools", tabCompanion: "Companion", tabMe: "Me",
@@ -88,11 +96,14 @@
       writeDeclaration: "Write your declaration", saveDecl: "Save Declaration", declSaved: "Saved",
       startPrompterMsg: "Group Leading Mode", phase: "Phase", question: "Q", closing: "Closing",
       wakeLockOn: "Screen kept awake", exitPrompter: "Exit", prev: "Previous", next: "Next",
+      backHome: "Home", backToc: "Contents", readAloud: "Read Aloud", pauseAloud: "Pause", resumeAloud: "Resume", stopAloud: "Stop", ttsUnsupported: "This device does not support read-aloud", ttsLoading: "Preparing audio…", fontSizeLabel: "Adjust font size",
+      hlAddNote: "Add Note", hlEditNote: "Edit Note", hlAskXz: "Ask Xiao Zhi", hlNotePlaceholder: "Write your reflection or question…", hlSave: "Save", hlCancel: "Cancel", askAboutLine: "About this line: “", askAboutLineEnd: "” — ",
       myths: "Leadership Myths, Busted", tracksTitle: "Keyword Tracker", occurrences: "occurrences", chaptersSpanned: "lessons",
       checklistTitle: "Teaching Integrity Check", checklistPickChapter: "Choose a lesson to check", checklistDone: "Completed",
       journeyTitle: "321 Journey Map", journeyNote: "",
       tier: { A: "A | Explicit Scripture Teaching", B: "B | Reasoned Theological Inference", C: "C | 321's Applied Language" },
       part: "Part ", of: " of ",
+      companionQsToggle: "💡 Example Questions", companionQsHide: "Hide Example Questions", companionQsHint: "Tap a question to ask Xiao Zhi directly",
     },
   };
 
@@ -103,9 +114,209 @@
     lang: localStorage.getItem(LANG_KEY) || "zh",
     data: {},        // lang -> parsed data.json
     user: loadUser(),
+    font: parseInt(localStorage.getItem(FONT_KEY), 10) || 0, // 0=標準 1=大 2=特大
   };
 
   function t() { return UI[state.lang]; }
+
+  try { document.documentElement.setAttribute("data-lang", state.lang); } catch (e) {}
+
+  // Localize the static boot-loading screen immediately (before data.json even
+  // starts fetching) so slow-network users on zs/en don't see zh-only text.
+  (function localizeBootScreen() {
+    try {
+      var BOOT_TEXT = {
+        zh: { bt: "321領導力載入中…", diag: "載入時間較長，可能是網路或快取問題。", reload: "重新載入", clear: "清除快取並重新載入" },
+        zs: { bt: "321领导力载入中…", diag: "载入时间较长，可能是网络或快取问题。", reload: "重新载入", clear: "清除快取并重新载入" },
+        en: { bt: "Loading 321 Leadership…", diag: "This is taking a while — it may be a network or cache issue.", reload: "Reload", clear: "Clear Cache & Reload" }
+      };
+      var bt = BOOT_TEXT[state.lang] || BOOT_TEXT.zh;
+      var elBt = document.getElementById("bootText");
+      var elDiag = document.getElementById("bootDiagMsg");
+      var elReload = document.getElementById("boot-reload");
+      var elClear = document.getElementById("boot-clear");
+      if (elBt) elBt.textContent = bt.bt;
+      if (elDiag) elDiag.textContent = bt.diag;
+      if (elReload) elReload.textContent = bt.reload;
+      if (elClear) elClear.textContent = bt.clear;
+    } catch (e) {}
+  })();
+
+  function applyFont() {
+    try {
+      document.documentElement.classList.remove("fs-lg", "fs-xl");
+      var cls = FONT_CLASS[state.font] || "";
+      if (cls) document.documentElement.classList.add(cls);
+    } catch (e) {}
+  }
+  function cycleFont() {
+    state.font = (state.font + 1) % 3;
+    try { localStorage.setItem(FONT_KEY, String(state.font)); } catch (e) {}
+    applyFont();
+  }
+  window.cycleFont = cycleFont;
+
+  // ---------------------------------------------------------------
+  // 語音朗讀 Read-Aloud — Azure real-voice via Cloudflare Worker (azure-tts.spch321.workers.dev),
+  // falls back to the device's built-in speechSynthesis if the Worker is unreachable.
+  // NOTE: this sandbox has no egress to *.workers.dev, so the Azure path is written to the
+  // same documented request contract as the existing companion/TTS Workers but is UNTESTED
+  // against the live Worker — verify voice names + response format after deploying, exactly
+  // like the companion chat's known limitation.
+  // ---------------------------------------------------------------
+  var TTS_ENDPOINT = "https://azure-tts.spch321.workers.dev";
+  var TTS_VOICE_BY_LANG = { zh: "zh-TW-YunJheNeural", zs: "zh-CN-YunxiNeural", en: "en-US-AndrewNeural" };
+  var TTS_SIL_SENTENCE = 140, TTS_SIL_COMMA = 140, TTS_SIL_ENUM = 260;
+
+  var spk = {
+    supported: (typeof window !== "undefined" && "speechSynthesis" in window),
+    active: false, paused: false, mode: "", queue: [], idx: 0, token: 0, curChId: null, audio: null,
+  };
+
+  function spkGetAudio() {
+    if (!spk.audio) {
+      spk.audio = new Audio();
+      spk.audio.preload = "auto";
+      try { spk.audio.playsInline = true; spk.audio.setAttribute("playsinline", ""); } catch (e) {}
+    }
+    return spk.audio;
+  }
+  function stripHtml(html) {
+    var div = document.createElement("div");
+    div.innerHTML = html || "";
+    return (div.textContent || div.innerText || "").replace(/\s+/g, " ").trim();
+  }
+  // split plain text into speakable sentence-sized chunks (CJK + English enders)
+  function spkChunks(text) {
+    var t = String(text || "").replace(/\s+/g, " ").trim();
+    if (!t) return [];
+    var enders = "。！？；\n";
+    var out = [], buf = "";
+    for (var i = 0; i < t.length; i++) {
+      buf += t[i];
+      if (enders.indexOf(t[i]) >= 0 && buf.length >= 40) { out.push(buf); buf = ""; }
+    }
+    if (buf.trim()) out.push(buf);
+    var fin = [];
+    out.forEach(function (s) {
+      if (/[a-zA-Z]/.test(s) && s.length > 260) {
+        s.split(/(?<=[.!?])\s+/).forEach(function (p) { if (p.trim()) fin.push(p.trim()); });
+      } else {
+        fin.push(s);
+      }
+    });
+    var out2 = [];
+    fin.forEach(function (s) {
+      while (s.length > 320) { out2.push(s.slice(0, 320)); s = s.slice(320); }
+      if (s) out2.push(s);
+    });
+    return out2.length ? out2 : [t];
+  }
+  function chapterSpeakChunks(ch) {
+    var parts = [stripHtml(ch.intro)];
+    (ch.sections || []).forEach(function (s) {
+      if (s.heading) parts.push(s.heading);
+      parts.push(stripHtml(s.html));
+    });
+    return spkChunks(parts.join(" "));
+  }
+  function ttsVoiceName() { return TTS_VOICE_BY_LANG[state.lang] || TTS_VOICE_BY_LANG.zh; }
+  function yunFetch(piece) {
+    return fetch(TTS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ voice: ttsVoiceName(), rate: "+0%", sil: TTS_SIL_SENTENCE, silc: TTS_SIL_COMMA, sile: TTS_SIL_ENUM, text: piece }),
+    }).then(function (res) {
+      if (!res.ok) throw new Error("TTS HTTP " + res.status);
+      return res.blob();
+    }).then(function (blob) { return URL.createObjectURL(blob); });
+  }
+  function updateSpeakButton() {
+    var btn = qs("#chSpeakBtn");
+    if (!btn) return;
+    if (spk.active && !spk.paused) {
+      btn.setAttribute("data-state", "playing"); btn.textContent = "⏸"; btn.setAttribute("aria-label", t().pauseAloud);
+    } else if (spk.active && spk.paused) {
+      btn.setAttribute("data-state", "paused"); btn.textContent = "▶"; btn.setAttribute("aria-label", t().resumeAloud);
+    } else {
+      btn.setAttribute("data-state", "idle"); btn.textContent = "🔊"; btn.setAttribute("aria-label", t().readAloud);
+    }
+  }
+  function spkStopAll() {
+    spk.token++;
+    spk.active = false; spk.paused = false; spk.mode = ""; spk.queue = []; spk.idx = 0; spk.curChId = null;
+    try { if (spk.audio) { spk.audio.pause(); spk.audio.onended = null; spk.audio.onerror = null; } } catch (e) {}
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+    updateSpeakButton();
+  }
+  function spkPlayNativeQueue(myToken) {
+    if (myToken !== spk.token || spk.paused) return;
+    if (spk.idx >= spk.queue.length) { spkStopAll(); return; }
+    if (!spk.supported) { spkStopAll(); uiToast(t().ttsUnsupported); return; }
+    var utter = new SpeechSynthesisUtterance(spk.queue[spk.idx]);
+    utter.lang = state.lang === "en" ? "en-US" : (state.lang === "zs" ? "zh-CN" : "zh-TW");
+    utter.onend = function () { if (myToken === spk.token && !spk.paused) { spk.idx++; spkPlayNativeQueue(myToken); } };
+    utter.onerror = function () { if (myToken === spk.token) spkStopAll(); };
+    try { window.speechSynthesis.speak(utter); } catch (e) { spkStopAll(); }
+  }
+  function spkPlayAzureQueue(myToken) {
+    if (myToken !== spk.token || spk.paused) return;
+    if (spk.idx >= spk.queue.length) { spkStopAll(); return; }
+    var btn = qs("#chSpeakBtn");
+    if (btn) btn.setAttribute("data-state", "loading");
+    yunFetch(spk.queue[spk.idx]).then(function (url) {
+      if (myToken !== spk.token) return;
+      var a = spkGetAudio();
+      a.src = url;
+      a.onended = function () { if (myToken === spk.token && !spk.paused) { spk.idx++; spkPlayAzureQueue(myToken); } };
+      a.onerror = function () { if (myToken === spk.token) { spk.mode = "native"; spkPlayNativeQueue(myToken); } };
+      var p = a.play();
+      if (p && p.catch) p.catch(function () { if (myToken === spk.token) { spk.mode = "native"; spkPlayNativeQueue(myToken); } });
+      updateSpeakButton();
+    }).catch(function () {
+      if (myToken !== spk.token) return;
+      spk.mode = "native";
+      spkPlayNativeQueue(myToken);
+    });
+  }
+  function speakChapter(chId) {
+    var d = D();
+    var ch = d.chapters[chId];
+    if (!ch) return;
+    spk.token++;
+    var myToken = spk.token;
+    spk.queue = chapterSpeakChunks(ch);
+    if (!spk.queue.length) return;
+    spk.idx = 0; spk.active = true; spk.paused = false; spk.curChId = chId; spk.mode = "azure";
+    updateSpeakButton();
+    spkPlayAzureQueue(myToken);
+  }
+  function speakToggleForChapter(chId) {
+    if (spk.active && spk.curChId === chId) {
+      spk.paused = !spk.paused;
+      if (spk.paused) {
+        if (spk.mode === "native") { try { window.speechSynthesis.pause(); } catch (e) {} }
+        else { try { spkGetAudio().pause(); } catch (e) {} }
+      } else {
+        if (spk.mode === "native") { try { window.speechSynthesis.resume(); } catch (e) {} spkPlayNativeQueue(spk.token); }
+        else { try { spkGetAudio().play(); } catch (e) {} }
+      }
+      updateSpeakButton();
+    } else {
+      spkStopAll();
+      speakChapter(chId);
+    }
+  }
+  window.speakToggleForChapter = speakToggleForChapter;
+  function uiToast(msg) {
+    try {
+      var el = document.createElement("div");
+      el.className = "uitoast";
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(function () { el.remove(); }, 2200);
+    } catch (e) {}
+  }
 
   function loadUser() {
     try {
@@ -198,10 +409,12 @@
   function render() {
     var parts = parseHash();
     var root = parts[0];
+    if (spk.active && !(root === "course" && parts[1] === spk.curChId)) spkStopAll();
     var view = qs("#view");
     view.innerHTML = "";
     updateTabbar(root);
     updateLangSwitch();
+    document.documentElement.setAttribute("data-lang", state.lang);
     qs("#brandName").textContent = t().brand;
     document.title = t().brand;
 
@@ -266,7 +479,7 @@
       var chs = p.chapters.map(function (n) { return "ch" + String(n).padStart(2, "0"); });
       var doneInPart = chs.filter(function (c) { return state.user.completedChapters[c]; }).length;
       html += '<a class="rowlink" href="#/course/' + chs[0] + '">';
-      html += '<div class="meta"><div class="t">' + esc(p.part_no) + '　' + esc(d.chapters[chs[0]].partTitle.replace(/^第[一二三四五六七八九十]+部\s*/, "")) + '</div>';
+      html += '<div class="meta"><div class="t">' + esc(p.part_no) + '　' + esc(d.chapters[chs[0]].partTitle.replace(/^(第[一二三四五六七八九十]+部|Part\s*\d+\s*[—-]?)\s*/, "")) + '</div>';
       html += '<div class="s">' + esc(p.range) + (state.lang === 'en' ? '' : '課') + ' · ' + doneInPart + '/5</div></div>';
       html += '<span class="chev">›</span></a>';
     });
@@ -289,7 +502,7 @@
       var partTitle = d.chapters[chs[0]].partTitle;
       var doneInPart = chs.filter(function (c) { return state.user.completedChapters[c]; }).length;
       html += '<details class="part"' + (doneInPart < 5 && doneInPart > 0 ? " open" : "") + '>';
-      html += '<summary><span class="pn">' + esc(p.part_no) + '</span><span class="pt">' + esc(partTitle.replace(/^第[一二三四五六七八九十]+部\s*/, "")) + '</span><span class="muted">' + doneInPart + '/5</span></summary>';
+      html += '<summary><span class="pn">' + esc(p.part_no) + '</span><span class="pt">' + esc(partTitle.replace(/^(第[一二三四五六七八九十]+部|Part\s*\d+\s*[—-]?)\s*/, "")) + '</span><span class="muted">' + doneInPart + '/5</span></summary>';
       html += '<div class="plist">';
       chs.forEach(function (cid) {
         var ch = d.chapters[cid];
@@ -360,6 +573,13 @@
     }
 
     var html = "";
+    html += '<div class="chtoolbar">';
+    html += '<a class="chtb-btn" href="#/today" aria-label="' + esc(t().backHome) + '">🏠</a>';
+    html += '<a class="chtb-btn" href="#/course" aria-label="' + esc(t().backToc) + '">☰</a>';
+    html += '<span class="chtb-spacer"></span>';
+    html += '<button class="chtb-btn" id="chSpeakBtn" data-state="idle" aria-label="' + esc(t().readAloud) + '">🔊</button>';
+    html += '<button class="chtb-btn" id="chFontBtn" onclick="cycleFont()" aria-label="' + esc(t().fontSizeLabel) + '">A⁺</button>';
+    html += '</div>';
     html += '<div class="chhead">';
     html += '<div class="pn">' + esc(ch.partTitle) + '</div>';
     html += '<h1>' + esc(ch.numFull) + '</h1>';
@@ -400,6 +620,13 @@
     view.innerHTML = html;
     window.scrollTo(0, 0);
 
+    // wire read-aloud button + sync its state if this chapter is already speaking
+    var speakBtn = qs("#chSpeakBtn", view);
+    if (speakBtn) {
+      speakBtn.addEventListener("click", function () { speakToggleForChapter(chId); });
+      if (spk.curChId === chId) updateSpeakButton();
+    }
+
     // wire deeper open tracking
     qsa("details.deeper", view).forEach(function (det) {
       det.addEventListener("toggle", function () {
@@ -409,19 +636,65 @@
         }
       });
     });
-    // wire highlight taps
+    // wire highlight taps + per-highlight note / ask-Xiaozhi actions
+    function findHighlight(sec, idx) {
+      return (state.user.highlights[chId] || []).find(function (h) { return h.sec === sec && h.idx === idx; });
+    }
+    function renderHlExtras(p, sec, idx) {
+      var next = p.nextElementSibling;
+      if (next && next.classList && next.classList.contains("hl-extras")) next.remove();
+      var h = findHighlight(sec, idx);
+      if (!h) return;
+      var box = document.createElement("div");
+      box.className = "hl-extras";
+      var noteHtml = h.note ? '<div class="hl-note" data-act="editnote">📝 ' + esc(h.note) + '</div>' : "";
+      box.innerHTML = noteHtml +
+        '<div class="hl-actions">' +
+        '<button type="button" data-act="note">📝 ' + esc(h.note ? t().hlEditNote : t().hlAddNote) + '</button>' +
+        '<button type="button" data-act="ask">💬 ' + esc(t().hlAskXz) + '</button>' +
+        '</div>';
+      p.parentNode.insertBefore(box, p.nextSibling);
+      box.querySelector('[data-act="note"]').addEventListener("click", function () { openNoteEditor(box, p, sec, idx); });
+      var noteEl = box.querySelector(".hl-note");
+      if (noteEl) noteEl.addEventListener("click", function () { openNoteEditor(box, p, sec, idx); });
+      box.querySelector('[data-act="ask"]').addEventListener("click", function () {
+        pendingAsk = t().askAboutLine + p.textContent.slice(0, 140) + t().askAboutLineEnd;
+        navigate("#/companion/" + chId);
+      });
+    }
+    function openNoteEditor(box, p, sec, idx) {
+      var h = findHighlight(sec, idx);
+      var existing = h && h.note ? h.note : "";
+      box.innerHTML = '<div class="hl-noteedit">' +
+        '<textarea rows="2" placeholder="' + esc(t().hlNotePlaceholder) + '">' + esc(existing) + '</textarea>' +
+        '<div class="hl-noteedit-btns"><button type="button" data-act="save" class="btn gold">' + esc(t().hlSave) + '</button>' +
+        '<button type="button" data-act="cancel" class="btn">' + esc(t().hlCancel) + '</button></div></div>';
+      var ta = box.querySelector("textarea");
+      ta.focus();
+      box.querySelector('[data-act="save"]').addEventListener("click", function () {
+        var hh = findHighlight(sec, idx);
+        if (hh) { hh.note = (ta.value || "").trim(); saveUser(); }
+        renderHlExtras(p, sec, idx);
+      });
+      box.querySelector('[data-act="cancel"]').addEventListener("click", function () { renderHlExtras(p, sec, idx); });
+    }
     qsa(".reader p[data-sec]", view).forEach(function (p) {
+      var sec0 = p.getAttribute("data-sec"), idx0 = parseInt(p.getAttribute("data-idx"), 10);
+      if (findHighlight(sec0, idx0)) renderHlExtras(p, sec0, idx0);
       p.addEventListener("click", function (e) {
-        if (e.target.closest("a")) return;
+        if (e.target.closest("a") || e.target.closest(".hl-extras")) return;
         var sec = p.getAttribute("data-sec"), idx = parseInt(p.getAttribute("data-idx"), 10);
         var arr = state.user.highlights[chId] = state.user.highlights[chId] || [];
         var existingIdx = arr.findIndex(function (h) { return h.sec === sec && h.idx === idx; });
         if (existingIdx >= 0) {
           arr.splice(existingIdx, 1);
           p.removeAttribute("data-hl");
+          var next = p.nextElementSibling;
+          if (next && next.classList && next.classList.contains("hl-extras")) next.remove();
         } else {
           arr.push({ sec: sec, idx: idx, text: p.textContent.slice(0, 120), at: Date.now(), lang: state.lang, chId: chId, chTitle: ch.title });
           p.setAttribute("data-hl", "1");
+          renderHlExtras(p, sec, idx);
         }
         saveUser();
       });
@@ -464,7 +737,7 @@
     });
     html += '</div>';
     html += '<div class="section-title">' + esc(t().toolPrompter) + '</div>';
-    html += '<div class="card"><p class="muted">' + esc(t().toolPrompterDesc) + (state.lang === "en" ? "" : "。從任一課的第十節「小組討論分享」進入，或先在「課程」選一課。") + '</p>';
+    html += '<div class="card"><p class="muted">' + esc(t().toolPrompterDesc) + (state.lang === "en" ? " Open it from section 10, \"Small-Group Discussion,\" in any lesson — or pick a lesson under \"Course\" first." : "。從任一課的第十節「小組討論分享」進入，或先在「課程」選一課。") + '</p>';
     html += '<a class="btn block" href="#/course">' + esc(t().tabCourse) + ' ›</a></div>';
     view.innerHTML = html;
   }
@@ -723,6 +996,7 @@
   // ---------------------------------------------------------------
   var chatSession = { messages: [] };
   var XIAOZHI_ENDPOINT = "https://xiaozhi-proxy.spch321.workers.dev";
+  var pendingAsk = null; // set by "ask Xiaozhi about this line" from a highlighted paragraph
 
   function companionSystemPrompt(chId) {
     var d = D();
@@ -741,8 +1015,15 @@
     return base;
   }
 
+  var companionQsOpen = false;
+  var companionQsPart = null;
+
   function renderCompanion(view, chId) {
     var d = D();
+    var chId2 = chId || currentChapterHint();
+    var curPartNo = (chId2 && d.chapters[chId2]) ? d.chapters[chId2].partNo : 1;
+    if (!companionQsPart) companionQsPart = curPartNo || 1;
+
     var html = '<div class="chatwrap">';
     html += '<div class="chatlog" id="chatlog">';
     if (!chatSession.messages.length) {
@@ -752,6 +1033,27 @@
       html += '<div class="msg ' + (m.role === "user" ? "user" : "ai") + '">' + esc(m.text) + '</div>';
     });
     html += '</div>';
+
+    html += '<button type="button" class="qs-toggle" id="companionQsToggle">' + esc(companionQsOpen ? t().companionQsHide : t().companionQsToggle) + '</button>';
+    html += '<div class="qs-panel" id="companionQsPanel" ' + (companionQsOpen ? "" : 'hidden') + '>';
+    var qsData = d.companionQs || [];
+    html += '<div class="qs-parts" id="qsParts">';
+    qsData.forEach(function (p) {
+      html += '<button type="button" class="qs-partchip' + (p.partNo === companionQsPart ? ' on' : '') + '" data-part="' + p.partNo + '">' + p.partNo + '</button>';
+    });
+    html += '</div>';
+    var curPart = qsData.find(function (p) { return p.partNo === companionQsPart; });
+    if (curPart) {
+      html += '<div class="qs-partlabel">' + esc(curPart.label) + '</div>';
+      html += '<div class="qs-hint">' + esc(t().companionQsHint) + '</div>';
+      html += '<div class="qs-list">';
+      curPart.qs.forEach(function (q, qi) {
+        html += '<button type="button" class="qs-chip" data-qidx="' + qi + '">' + esc(q) + '</button>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+
     html += '<div class="chatinput"><textarea id="chatIn" rows="1" placeholder="' + esc(t().companionPlaceholder) + '"></textarea><button id="chatSend">' + esc(t().companionSend) + '</button></div>';
     html += '</div>';
     view.innerHTML = html;
@@ -759,11 +1061,42 @@
     var log = qs("#chatlog", view);
     log.scrollTop = log.scrollHeight;
 
-    var chId2 = chId || currentChapterHint();
+    var chatInEl = qs("#chatIn", view);
+    if (pendingAsk) {
+      chatInEl.value = pendingAsk;
+      pendingAsk = null;
+      setTimeout(function () { chatInEl.focus(); }, 0);
+    }
     qs("#chatSend", view).addEventListener("click", function () { sendChat(chId2); });
-    qs("#chatIn", view).addEventListener("keydown", function (e) {
+    chatInEl.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(chId2); }
     });
+
+    qs("#companionQsToggle", view).addEventListener("click", function () {
+      companionQsOpen = !companionQsOpen;
+      renderCompanion(view, chId);
+    });
+    var partsEl = qs("#qsParts", view);
+    if (partsEl) {
+      partsEl.addEventListener("click", function (e) {
+        var btn = e.target.closest(".qs-partchip");
+        if (!btn) return;
+        companionQsPart = parseInt(btn.getAttribute("data-part"), 10);
+        renderCompanion(view, chId);
+      });
+    }
+    var listEl = qs(".qs-list", view);
+    if (listEl && curPart) {
+      listEl.addEventListener("click", function (e) {
+        var btn = e.target.closest(".qs-chip");
+        if (!btn) return;
+        var qi = parseInt(btn.getAttribute("data-qidx"), 10);
+        var qText = curPart.qs[qi];
+        if (!qText) return;
+        chatInEl.value = qText;
+        sendChat(chId2);
+      });
+    }
   }
 
   function currentChapterHint() {
@@ -928,6 +1261,7 @@
 
   function init() {
     applyTheme();
+    applyFont();
     on(qs("#langswitch"), "click", "button", function (e, btn) {
       switchLang(btn.getAttribute("data-lang"));
     });
@@ -944,7 +1278,12 @@
       });
     }).catch(function (err) {
       finishBoot();
-      qs("#view").innerHTML = '<div class="empty">載入內容失敗，請檢查網路連線後重新整理。<br><span style="font-size:11px;">' + esc(String(err)) + '</span></div>';
+      var loadFailMsg = {
+        zh: "載入內容失敗，請檢查網路連線後重新整理。",
+        zs: "载入内容失败，请检查网络连线后重新整理。",
+        en: "Failed to load content. Please check your network connection and reload."
+      }[state.lang] || "Failed to load content. Please check your network connection and reload.";
+      qs("#view").innerHTML = '<div class="empty">' + esc(loadFailMsg) + '<br><span style="font-size:11px;">' + esc(String(err)) + '</span></div>';
     });
 
     if ("serviceWorker" in navigator) {

@@ -133,6 +133,13 @@ nav.tabbar a svg{width:21px;height:21px;}
 .part .plist{padding:0 16px 8px;}
 
 /* ---------- chapter reader ---------- */
+.chtoolbar{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+.chtb-btn{display:inline-flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 10px; border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); border-radius:9px; font-size:15px; text-decoration:none; cursor:pointer;}
+.chtb-btn:active{opacity:.75;}
+.chtb-btn[data-state="loading"]{opacity:.6;}
+.chtb-btn[data-state="playing"]{background:var(--accent); border-color:var(--accent); color:#fff;}
+.chtb-spacer{flex:1;}
+.uitoast{position:fixed; left:50%; bottom:calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom)); transform:translateX(-50%); background:var(--ink); color:var(--bg); font-size:13px; padding:9px 16px; border-radius:999px; z-index:200; box-shadow:var(--shadow); max-width:88vw; text-align:center;}
 .chhead{margin-bottom:18px;}
 .chhead .pn{color:var(--gold); font-size:12.5px; font-weight:700;}
 .chhead h1{font-size:23px; margin:6px 0 4px;}
@@ -153,14 +160,38 @@ nav.tabbar a svg{width:21px;height:21px;}
 .declbox p.decl:last-child{margin-bottom:0;}
 .declbox .savebtn{margin-top:8px;}
 
+/* ---------- reading font size (A / A+ / A++) ---------- */
+.rd-font{border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); border-radius:8px; padding:6px 10px; font-weight:700; font-size:13px; cursor:pointer;}
+html.fs-lg .reader p{font-size:18.5px;}
+html.fs-lg .reader h2{font-size:20.5px;}
+html.fs-lg .reader h3{font-size:17.5px;}
+html.fs-lg details.deeper summary{font-size:15.5px;}
+html.fs-lg details.deeper .a{font-size:15.5px;}
+html.fs-lg .chhead h1{font-size:25px;}
+html.fs-xl .reader p{font-size:21px;}
+html.fs-xl .reader h2{font-size:23px;}
+html.fs-xl .reader h3{font-size:19.5px;}
+html.fs-xl details.deeper summary{font-size:17px;}
+html.fs-xl details.deeper .a{font-size:17px;}
+html.fs-xl .chhead h1{font-size:27px;}
+
 /* ---------- highlight ---------- */
 .reader p[data-hl]{background:linear-gradient(transparent 60%, var(--gold-soft) 60%); cursor:pointer; border-radius:2px;}
+.hl-extras{margin:-8px 0 14px; padding:8px 12px; background:var(--surface-alt); border-left:3px solid var(--gold); border-radius:6px; font-size:13px;}
+.hl-note{color:var(--ink); white-space:pre-wrap; margin-bottom:8px; cursor:pointer; line-height:1.5;}
+.hl-actions{display:flex; gap:8px; flex-wrap:wrap;}
+.hl-actions button{border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); border-radius:8px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer;}
+.hl-actions button:active{opacity:.75;}
+.hl-noteedit textarea{width:100%; box-sizing:border-box; border:1px solid var(--border-strong); border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit; resize:vertical; background:var(--surface); color:var(--ink); margin-bottom:8px;}
+.hl-noteedit-btns{display:flex; gap:8px;}
+.hl-noteedit-btns .btn{padding:6px 14px; font-size:13px;}
 
 /* ---------- deeper (想更深) ---------- */
 details.deeper{ display:block; margin:14px 0; border:1.5px solid var(--accent); border-radius:12px; background:var(--surface); overflow:hidden; }
 details.deeper summary{ list-style:none; cursor:pointer; padding:10px 14px; font-weight:700; color:var(--accent); display:flex; align-items:flex-start; gap:8px; font-size:14px; }
 details.deeper summary::-webkit-details-marker{display:none;}
 details.deeper summary::before{content:"想更深？"; font-family:"Noto Serif TC",serif; font-weight:700; flex:0 0 auto;}
+html[data-lang="en"] details.deeper summary::before{content:"Think Deeper?"; font-family:inherit;}
 details.deeper summary .q{color:var(--ink-soft); font-weight:500;}
 details.deeper[open] summary{border-bottom:1px solid var(--border);}
 details.deeper .a{background:var(--surface-alt); padding:14px; font-size:14px; margin:0;}
@@ -182,8 +213,11 @@ details.deeper .refs{font-size:12px; color:var(--ink-faint); margin-top:8px;}
 .mythcard{border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden;}
 .mythcard .m{background:var(--surface-alt); padding:14px; font-weight:600; font-size:14.5px;}
 .mythcard .m::before{content:"迷思："; color:var(--bad); font-weight:700;}
+html[data-lang="en"] .mythcard .m::before{content:"Myth: ";}
 .mythcard .t{padding:14px; font-size:14px;}
 .mythcard .t::before{content:"其實："; color:var(--good); font-weight:700;}
+html[data-lang="zs"] .mythcard .t::before{content:"其实：";}
+html[data-lang="en"] .mythcard .t::before{content:"Truth: ";}
 .mythcard .meta{padding:0 14px 12px; font-size:11.5px; color:var(--ink-faint);}
 
 /* ---------- journey map ---------- */
@@ -225,6 +259,19 @@ details.deeper .refs{font-size:12px; color:var(--ink-faint); margin-top:8px;}
 .chatinput textarea{flex:1; resize:none; border:1px solid var(--border-strong); border-radius:10px; padding:10px 12px; font-size:14.5px; background:var(--surface); color:var(--ink); font-family:inherit; max-height:100px;}
 .chatinput button{border:none; background:var(--accent); color:#fff; border-radius:10px; padding:0 16px; font-weight:700;}
 
+/* ---------- companion example-question bank ---------- */
+.qs-toggle{align-self:flex-start; margin:2px 0 6px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:6px 14px; font-size:12.5px; font-weight:700; cursor:pointer;}
+.qs-toggle:active{opacity:.8;}
+.qs-panel{border:1px solid var(--border); border-radius:12px; background:var(--surface-alt); padding:10px; margin-bottom:8px; max-height:44vh; display:flex; flex-direction:column;}
+.qs-parts{display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; flex:0 0 auto; -webkit-overflow-scrolling:touch;}
+.qs-partchip{flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); font-size:13px; font-weight:700; cursor:pointer;}
+.qs-partchip.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+.qs-partlabel{font-size:12.5px; font-weight:700; color:var(--accent-ink); margin:6px 0 2px;}
+.qs-hint{font-size:11px; color:var(--ink-faint); margin-bottom:6px;}
+.qs-list{display:flex; flex-direction:column; gap:6px; overflow-y:auto;}
+.qs-chip{text-align:left; border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); border-radius:10px; padding:8px 12px; font-size:13px; line-height:1.5; cursor:pointer;}
+.qs-chip:active{background:var(--accent-soft); border-color:var(--accent);}
+
 /* ---------- me ---------- */
 .declitem{border-bottom:1px solid var(--border); padding:12px 0;}
 .declitem .d{font-size:14.5px; margin-bottom:4px;}
@@ -237,9 +284,9 @@ details.deeper .refs{font-size:12px; color:var(--ink-faint); margin-top:8px;}
 
 <div id="boot">
   <div class="spin"></div>
-  <div class="bt">321領導力載入中…</div>
+  <div class="bt" id="bootText">321領導力載入中…</div>
   <div id="boot-diag">
-    <div>載入時間較長，可能是網路或快取問題。</div>
+    <div id="bootDiagMsg">載入時間較長，可能是網路或快取問題。</div>
     <button id="boot-reload">重新載入</button>
     <button id="boot-clear">清除快取並重新載入</button>
   </div>
