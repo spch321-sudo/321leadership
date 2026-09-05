@@ -47,6 +47,7 @@
       msgExpand: "展開全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "刪除", msgDeleteConfirm: "要刪除這則回覆嗎？",
       meFavorites: "我的收藏", meNoFavorites: "還沒有收藏。在陪讀對話中點一下「收藏」，把小智的回答留下來。",
       meFontSize: "字級大小", fontStandard: "標準", fontLarge: "大", fontXLarge: "特大",
+      meVoice: "朗讀聲音",
     },
     zs: {
       brand: "321领导力", tabToday: "今日", tabCourse: "课程", tabTools: "工具", tabCompanion: "陪读", tabMe: "我的",
@@ -80,6 +81,7 @@
       msgExpand: "展开全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "删除", msgDeleteConfirm: "要删除这则回复吗？",
       meFavorites: "我的收藏", meNoFavorites: "还没有收藏。在陪读对话中点一下「收藏」，把小智的回答留下来。",
       meFontSize: "字级大小", fontStandard: "标准", fontLarge: "大", fontXLarge: "特大",
+      meVoice: "朗读声音",
     },
     en: {
       brand: "321 Leadership", tabToday: "Today", tabCourse: "Lessons", tabTools: "Tools", tabCompanion: "Companion", tabMe: "Me",
@@ -113,6 +115,7 @@
       msgExpand: "Show more", msgCollapse: "Collapse", msgSave: "Save", msgSaved: "Saved", msgDelete: "Delete", msgDeleteConfirm: "Delete this reply?",
       meFavorites: "My Saved Replies", meNoFavorites: "No saved replies yet. Tap “Save” under one of Xiao Zhi's answers to keep it here.",
       meFontSize: "Font Size", fontStandard: "Standard", fontLarge: "Large", fontXLarge: "X-Large",
+      meVoice: "Reading Voice",
     },
   };
 
@@ -175,8 +178,27 @@
   // like the companion chat's known limitation.
   // ---------------------------------------------------------------
   var TTS_ENDPOINT = "https://azure-tts.spch321.workers.dev";
-  var TTS_VOICE_BY_LANG = { zh: "zh-TW-YunJheNeural", zs: "zh-CN-YunxiNeural", en: "en-US-AndrewNeural" };
   var TTS_SIL_SENTENCE = 140, TTS_SIL_COMMA = 140, TTS_SIL_ENUM = 260;
+  // 每個語言版本可選的朗讀聲音——跟姊妹App「晨讀321」共用同一個Worker、同一批Azure真人語音，
+  // 使用者可在「我的」分頁依目前所在的語言版本切換；voice id存在 state.user.ttsVoice[lang]。
+  var TTS_VOICE_OPTIONS = {
+    zh: [
+      { id: "yunjhe", voice: "zh-TW-YunJheNeural", label: "雲哲" },
+      { id: "yunfan", voice: "zh-CN-Yunfan:DragonHDLatestNeural", label: "雲帆" },
+      { id: "xiaochen", voice: "zh-CN-Xiaochen:DragonHDLatestNeural", label: "曉辰" },
+    ],
+    zs: [
+      { id: "yunfan", voice: "zh-CN-Yunfan:DragonHDLatestNeural", label: "云帆" },
+      { id: "yunjhe", voice: "zh-TW-YunJheNeural", label: "云哲" },
+      { id: "xiaochen", voice: "zh-CN-Xiaochen:DragonHDLatestNeural", label: "晓辰" },
+    ],
+    en: [
+      { id: "andrew", voice: "en-US-AndrewNeural", label: "Andrew" },
+      { id: "emma", voice: "en-US-EmmaNeural", label: "Emma" },
+      { id: "brian", voice: "en-US-BrianNeural", label: "Brian" },
+    ],
+  };
+  var TTS_VOICE_DEFAULT = { zh: "yunjhe", zs: "yunfan", en: "andrew" };
 
   // ---------------------------------------------------------------
   // TTS pronunciation fix-up ("破音字" homophone substitution) — applied ONLY
@@ -320,7 +342,10 @@
     div.innerHTML = html || "";
     return (div.textContent || div.innerText || "").replace(/\s+/g, " ").trim();
   }
-  // split plain text into speakable sentence-sized chunks (CJK + English enders)
+  // split plain text into speakable sentence-sized chunks (CJK + English enders).
+  // Chunks are merged up to ~120 chars before cutting (not just at the first sentence-ender)
+  // so a reading has fewer, longer pieces — fewer audio-source swaps, which is what actually
+  // sounds like a "join" between chunks — matching the sister app 晨讀321's own chunking size.
   function spkChunks(text) {
     var t = String(text || "").replace(/\s+/g, " ").trim();
     if (!t) return [];
@@ -328,7 +353,7 @@
     var out = [], buf = "";
     for (var i = 0; i < t.length; i++) {
       buf += t[i];
-      if (enders.indexOf(t[i]) >= 0 && buf.length >= 40) { out.push(buf); buf = ""; }
+      if (enders.indexOf(t[i]) >= 0 && buf.length >= 120) { out.push(buf); buf = ""; }
     }
     if (buf.trim()) out.push(buf);
     var fin = [];
@@ -384,23 +409,38 @@
     });
     return spkChunks(ttsPronounceFix(parts.join(" ")));
   }
-  function ttsVoiceName() { return TTS_VOICE_BY_LANG[state.lang] || TTS_VOICE_BY_LANG.zh; }
+  function ttsVoiceName() {
+    var opts = TTS_VOICE_OPTIONS[state.lang] || TTS_VOICE_OPTIONS.zh;
+    var chosenId = (state.user.ttsVoice && state.user.ttsVoice[state.lang]) || TTS_VOICE_DEFAULT[state.lang] || opts[0].id;
+    var found = null;
+    for (var i = 0; i < opts.length; i++) { if (opts[i].id === chosenId) { found = opts[i]; break; } }
+    return (found || opts[0]).voice;
+  }
+  function setTtsVoice(lang, id) {
+    if (!state.user.ttsVoice) state.user.ttsVoice = {};
+    state.user.ttsVoice[lang] = id;
+    saveUser();
+    if (spk.active) spkStopAll(); // voice just changed — any in-progress playback was using the old one
+  }
 
   // ---------------------------------------------------------------
-  // Pre-download + single continuous file + background playback.
+  // Pre-download-ahead + progressive playback + background playback.
   //
-  // The old approach fetched and played one chunk at a time (fetch → play → wait for
-  // "onended" → fetch the next chunk), which is exactly what produced the reported
-  // "斷斷續續" choppiness: a live network round-trip sits between every chunk. Now every
-  // chunk for the whole reading is fetched up front (a few at a time, cached on-device
-  // afterward via the Cache Storage API), concatenated into ONE audio Blob, and played
-  // back through a single <audio> element start-to-finish — no per-chunk gaps, and a
-  // reopened chapter/reply plays instantly offline from cache without hitting the network
-  // again. A single long-lived <audio> element (rather than one swapped out per chunk) is
-  // also what lets iOS keep the audio going in the background / on the lock screen, backed
-  // by the MediaSession wiring in speakStart() below.
+  // Only the FIRST chunk needs to finish downloading before reading starts — there's no
+  // "wait for the whole chapter" delay any more. While that first chunk plays, the next
+  // couple of chunks are already being fetched in the background (a lookahead window, not
+  // one-at-a-time-on-demand), so by the time the current chunk's audio ends, the next one
+  // is normally already sitting in memory — that lookahead is what actually fixes the
+  // reported "斷斷續續" choppiness (a live network round-trip used to sit between every
+  // chunk because the old version only started fetching chunk N+1 once chunk N had already
+  // finished playing). Every chunk fetched is also cached on-device via the Cache Storage
+  // API, so replaying the same reading later — even offline — needs no network at all. A
+  // single long-lived <audio> element is reused for every chunk (its src is swapped, the
+  // element itself never recreated) — that's what lets iOS keep audio going in the
+  // background / on the lock screen, backed by the MediaSession wiring below.
   // ---------------------------------------------------------------
   var TTS_AUDIO_CACHE = "l321-tts-audio-v3";
+  var TTS_LOOKAHEAD = 2; // how many chunks beyond the one currently playing to keep pre-fetched
   function ttsCacheKeyFor(voice, rate, text) {
     // Cache Storage keys on a Request/URL, not a hash — synthesize one deterministically
     // from voice+rate+text (no hashing library needed) so identical text always maps to
@@ -409,12 +449,19 @@
     for (var i = 0; i < text.length; i++) { h = ((h << 5) - h + text.charCodeAt(i)) | 0; }
     return TTS_ENDPOINT + "?voice=" + encodeURIComponent(voice) + "&rate=" + encodeURIComponent(rate) + "&h=" + h + "&n=" + text.length;
   }
+  // In-flight de-dupe: the chunk currently being "stepped to" and the background lookahead
+  // prefetch can otherwise both go to fetch the very same not-yet-cached piece at once —
+  // this makes the second caller just await the first call's own promise instead of firing
+  // a duplicate network request.
+  var TTS_INFLIGHT = {};
   function yunFetchBuffer(piece) {
     var voice = ttsVoiceName(), rate = "+0%";
+    var key = ttsCacheKeyFor(voice, rate, piece);
+    if (TTS_INFLIGHT[key]) return TTS_INFLIGHT[key];
     var canCache = ("caches" in window) && ("Request" in window);
-    var req = canCache ? new Request(ttsCacheKeyFor(voice, rate, piece)) : null;
+    var req = canCache ? new Request(key) : null;
     var openCache = canCache ? caches.open(TTS_AUDIO_CACHE).catch(function () { return null; }) : Promise.resolve(null);
-    return openCache.then(function (cache) {
+    var p = openCache.then(function (cache) {
       var matchP = (cache && req) ? cache.match(req) : Promise.resolve(null);
       return matchP.then(function (cached) {
         if (cached) return cached.arrayBuffer();
@@ -438,32 +485,67 @@
         });
       });
     });
+    p.then(function () { delete TTS_INFLIGHT[key]; }, function () { delete TTS_INFLIGHT[key]; });
+    TTS_INFLIGHT[key] = p;
+    return p;
   }
-  // Fetches every chunk (a few in flight at once — fast, but doesn't hammer the Worker),
-  // in original order, then concatenates them into one Blob once ALL of them have arrived.
-  function ttsBuildFullAudio(myToken, queue) {
-    if (!queue.length) return Promise.resolve(null);
-    var CONCURRENCY = 3;
-    var buffers = new Array(queue.length);
-    var nextIdx = 0, doneCount = 0, failed = false;
-    return new Promise(function (resolve, reject) {
-      function pump() {
-        if (failed || myToken !== spk.token) return;
-        if (nextIdx >= queue.length) return;
-        var i = nextIdx++;
-        yunFetchBuffer(queue[i]).then(function (buf) {
-          if (failed || myToken !== spk.token) return;
-          buffers[i] = buf;
-          doneCount++;
-          if (doneCount >= queue.length) resolve(new Blob(buffers, { type: "audio/mpeg" }));
-          else pump();
-        }).catch(function (err) {
-          if (failed) return;
-          failed = true;
-          reject(err);
+  // Makes sure the chunks from spk.idx up to +TTS_LOOKAHEAD are already being fetched (fire
+  // and forget — failures here are silently ignored, spkAdvanceAzure will hit the same
+  // network error again for real, in order, when it actually gets to that chunk).
+  function ttsPrefetchAhead(myToken) {
+    for (var d = 1; d <= TTS_LOOKAHEAD; d++) {
+      var i = spk.idx + d;
+      if (i >= spk.queue.length) break;
+      (function (piece) {
+        yunFetchBuffer(piece).catch(function () {});
+      })(spk.queue[i]);
+    }
+    void myToken; // kept for symmetry/future use — prefetch itself is token-agnostic (its results just sit in cache)
+  }
+  // Plays spk.queue[spk.idx], then on "ended" advances to the next chunk — reusing the same
+  // <audio> element throughout. Combined with ttsPrefetchAhead() above, only the very first
+  // chunk is ever waited on "cold"; every later chunk is normally already fetched by the
+  // time it's needed.
+  function spkAdvanceAzure(myToken) {
+    if (myToken !== spk.token) return;
+    if (spk.idx >= spk.queue.length) { spkStopAll(); return; }
+    var first = (spk.idx === 0);
+    var piece = spk.queue[spk.idx];
+    spk.loading = first;
+    if (first) updateSpeakButtons();
+    yunFetchBuffer(piece).then(function (buf) {
+      if (myToken !== spk.token) return;
+      spk.loading = false;
+      ttsPrefetchAhead(myToken);
+      var url;
+      try { url = URL.createObjectURL(new Blob([buf], { type: "audio/mpeg" })); } catch (e) { spkStopAll(); return; }
+      var a = spkGetAudio();
+      var oldSrc = a.src;
+      a.onended = null; a.onerror = null;
+      a.src = url;
+      if (oldSrc) { try { URL.revokeObjectURL(oldSrc); } catch (e) {} }
+      a.onended = function () { if (myToken === spk.token) { spk.idx++; spkAdvanceAzure(myToken); } };
+      a.onerror = function () {
+        if (myToken !== spk.token) return;
+        if (first) { spk.mode = "native"; spkPlayNativeQueue(myToken); }
+        else { spk.idx++; spkAdvanceAzure(myToken); } // a mid-reading chunk failed to decode — skip it, keep going
+      };
+      if (first) setupMediaSession(spk.title);
+      try { if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing"; } catch (e) {}
+      var p = a.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          if (myToken !== spk.token) return;
+          if (first) { spk.mode = "native"; spkPlayNativeQueue(myToken); }
+          else { spk.idx++; spkAdvanceAzure(myToken); }
         });
       }
-      for (var c = 0; c < CONCURRENCY && c < queue.length; c++) pump();
+      updateSpeakButtons();
+    }).catch(function () {
+      if (myToken !== spk.token) return;
+      spk.loading = false;
+      if (first) { spk.mode = "native"; spkPlayNativeQueue(myToken); }
+      else { spk.idx++; spkAdvanceAzure(myToken); } // network hiccup mid-reading — skip this one, don't hard-stop
     });
   }
   function setupMediaSession(title) {
@@ -529,25 +611,7 @@
     if (!queue || !queue.length) return;
     spk.queue = queue; spk.idx = 0; spk.active = true; spk.paused = false; spk.loading = true; spk.curKey = key; spk.mode = "azure"; spk.title = title || "";
     updateSpeakButtons();
-    ttsBuildFullAudio(myToken, queue).then(function (blob) {
-      if (myToken !== spk.token) return;
-      spk.loading = false;
-      if (!blob || !blob.size) { spkStopAll(); return; }
-      var url = URL.createObjectURL(blob);
-      var a = spkGetAudio();
-      a.src = url;
-      a.onended = function () { if (myToken === spk.token) spkStopAll(); };
-      a.onerror = function () { if (myToken === spk.token) { spk.mode = "native"; spkPlayNativeQueue(myToken); } };
-      setupMediaSession(spk.title);
-      var p = a.play();
-      if (p && p.catch) p.catch(function () { if (myToken === spk.token) { spk.mode = "native"; spkPlayNativeQueue(myToken); } });
-      updateSpeakButtons();
-    }).catch(function () {
-      if (myToken !== spk.token) return;
-      spk.loading = false;
-      spk.mode = "native";
-      spkPlayNativeQueue(myToken);
-    });
+    spkAdvanceAzure(myToken);
   }
   function speakToggle(key, buildQueue, title) {
     if (spk.active && spk.curKey === key) {
@@ -604,6 +668,7 @@
       discussionDone: {},    // chId -> {qno: bool}
       favorites: [],          // [{msgId, chId, chTitle, question, answer, at}] — saved Xiao Zhi replies
       theme: "auto",
+      ttsVoice: { zh: "yunjhe", zs: "yunfan", en: "andrew" }, // per-language chosen 🔊 voice id (see TTS_VOICE_OPTIONS)
     };
   }
   // Merge saved data over the defaults so a returning user's older localStorage blob
@@ -745,7 +810,8 @@
   window.L321 = {
     state: state, saveUser: saveUser, UI: UI, mdToHtml: mdToHtml, ttsPronounceFix: ttsPronounceFix, chapterSpeakChunks: chapterSpeakChunks,
     spk: spk, speakToggleForChapter: speakToggleForChapter, speakToggleForMsg: speakToggleForMsg,
-    yunFetchBuffer: yunFetchBuffer, ttsBuildFullAudio: ttsBuildFullAudio, TTS_AUDIO_CACHE: TTS_AUDIO_CACHE,
+    yunFetchBuffer: yunFetchBuffer, TTS_AUDIO_CACHE: TTS_AUDIO_CACHE, ttsVoiceName: ttsVoiceName,
+    TTS_VOICE_OPTIONS: TTS_VOICE_OPTIONS, setTtsVoice: setTtsVoice,
     // getter (not a direct reference) because `chatSession`/`renderCompanion` are assigned further
     // down this same IIFE, after this object literal already runs — a plain reference here would
     // capture `undefined` for anything not yet hoisted-with-value at this point in the file.
@@ -1696,6 +1762,14 @@
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);">';
     html += '<span>' + esc(t().meFontSize) + '</span>';
     html += '<div class="langswitch" id="fontswitch"><button data-font="0">' + esc(t().fontStandard) + '</button><button data-font="1">' + esc(t().fontLarge) + '</button><button data-font="2">' + esc(t().fontXLarge) + '</button></div>';
+    html += '</div>';
+    var voiceOpts = TTS_VOICE_OPTIONS[state.lang] || TTS_VOICE_OPTIONS.zh;
+    var curVoiceId = (state.user.ttsVoice && state.user.ttsVoice[state.lang]) || TTS_VOICE_DEFAULT[state.lang];
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);">';
+    html += '<span>' + esc(t().meVoice) + '</span>';
+    html += '<div class="langswitch" id="voiceswitch">' + voiceOpts.map(function (o) {
+      return '<button data-voice="' + esc(o.id) + '">' + esc(o.label) + '</button>';
+    }).join("") + '</div>';
     html += '</div></div>';
 
     view.innerHTML = html;
@@ -1712,6 +1786,13 @@
       b.classList.toggle("active", parseInt(b.getAttribute("data-font"), 10) === state.font);
       b.addEventListener("click", function () {
         setFont(parseInt(b.getAttribute("data-font"), 10));
+        renderMe(view);
+      });
+    });
+    qsa("#voiceswitch button", view).forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-voice") === curVoiceId);
+      b.addEventListener("click", function () {
+        setTtsVoice(state.lang, b.getAttribute("data-voice"));
         renderMe(view);
       });
     });
