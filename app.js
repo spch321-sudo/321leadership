@@ -133,7 +133,7 @@
   // ---------------------------------------------------------------
   function loadData(lang) {
     if (state.data[lang]) return Promise.resolve(state.data[lang]);
-    return fetch("data/data." + lang + ".json").then(function (r) {
+    return fetch("data." + lang + ".json").then(function (r) {
       if (!r.ok) throw new Error("data load failed: " + r.status);
       return r.json();
     }).then(function (d) {
@@ -250,7 +250,7 @@
     var doneCount = Object.keys(state.user.completedChapters).filter(function (c) { return d.chapters[c]; }).length;
 
     var html = "";
-    html += '<div class="hero-badge"><img src="icons/icon-192.png" alt="' + esc(d.appName || "321領導力") + '">';
+    html += '<div class="hero-badge"><img src="icon-192.png" alt="' + esc(d.appName || "321領導力") + '">';
     html += '<div class="hb-title">' + esc(d.appName || "321領導力") + '</div>';
     html += '<div class="hb-sub">' + esc(d.bookTitle || "") + '</div></div>';
     html += '<div class="card">';

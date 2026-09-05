@@ -1,7 +1,7 @@
 // 321領導力 — Service Worker
 // Versioned cache: bump VERSION whenever app shell or data content changes,
 // otherwise already-installed PWA users will keep seeing stale content.
-var VERSION = "v1.2.0";
+var VERSION = "v1.2.1";
 var SHELL_CACHE = "l321-shell-" + VERSION;
 var DATA_CACHE = "l321-data-" + VERSION;
 
@@ -10,21 +10,21 @@ var SHELL_FILES = [
   "./index.html",
   "./app.js",
   "./manifest.json",
-  "./icons/icon-72.png",
-  "./icons/icon-96.png",
-  "./icons/icon-128.png",
-  "./icons/icon-144.png",
-  "./icons/icon-152.png",
-  "./icons/icon-180.png",
-  "./icons/icon-192.png",
-  "./icons/icon-384.png",
-  "./icons/icon-512.png",
+  "./icon-72.png",
+  "./icon-96.png",
+  "./icon-128.png",
+  "./icon-144.png",
+  "./icon-152.png",
+  "./icon-180.png",
+  "./icon-192.png",
+  "./icon-384.png",
+  "./icon-512.png",
 ];
 
 var DATA_FILES = [
-  "./data/data.zh.json",
-  "./data/data.zs.json",
-  "./data/data.en.json",
+  "./data.zh.json",
+  "./data.zs.json",
+  "./data.en.json",
 ];
 
 self.addEventListener("install", function (event) {
