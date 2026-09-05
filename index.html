@@ -226,14 +226,20 @@ html.fs-xl .empty{font-size:17.5px;}
 
 /* ---------- highlight ---------- */
 .reader p[data-hl]{background:linear-gradient(transparent 60%, var(--gold-soft) 60%); cursor:pointer; border-radius:2px;}
-.hl-extras{margin:-8px 0 14px; padding:8px 12px; background:var(--surface-alt); border-left:3px solid var(--gold); border-radius:6px; font-size:13px;}
-.hl-note{color:var(--ink); white-space:pre-wrap; margin-bottom:8px; cursor:pointer; line-height:1.5;}
-.hl-actions{display:flex; gap:8px; flex-wrap:wrap;}
-.hl-actions button{border:1px solid var(--border-strong); background:var(--surface); color:var(--ink); border-radius:8px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer;}
-.hl-actions button:active{opacity:.75;}
-.hl-noteedit textarea{width:100%; box-sizing:border-box; border:1px solid var(--border-strong); border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit; resize:vertical; background:var(--surface); color:var(--ink); margin-bottom:8px;}
-.hl-noteedit-btns{display:flex; gap:8px;}
-.hl-noteedit-btns .btn{padding:6px 14px; font-size:13px;}
+.hl-note{margin:-8px 0 14px; padding:8px 12px; background:var(--surface-alt); border-left:3px solid var(--gold); border-radius:6px; font-size:13px; color:var(--ink); white-space:pre-wrap; cursor:pointer; line-height:1.5;}
+.hl-hint{background:var(--gold-soft); color:var(--gold); border-radius:8px; padding:9px 12px; font-size:12.5px; line-height:1.6; margin-bottom:14px;}
+
+/* ---------- highlight reflection sheet (bottom sheet modal) ---------- */
+.hlsheet-mask{position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:400; display:flex; align-items:flex-end;}
+.hlsheet-card{background:var(--surface); width:100%; max-height:86vh; overflow-y:auto; border-radius:18px 18px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom)); box-shadow:0 -8px 30px rgba(0,0,0,.25);}
+.hlsheet-title{font-size:16px; font-weight:800; color:var(--ink); margin-bottom:10px;}
+.hlsheet-quote{display:block; background:var(--gold-soft); color:var(--ink); border-radius:8px; padding:10px 12px; font-size:14px; line-height:1.7; margin-bottom:12px;}
+.hlsheet-ta{width:100%; box-sizing:border-box; border:1px solid var(--border-strong); border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; resize:vertical; background:var(--surface-alt); color:var(--ink); min-height:84px; margin-bottom:12px;}
+.hlsheet-acts{display:flex; gap:10px; margin-bottom:8px;}
+.hlsheet-acts .btn{flex:1;}
+.hlsheet-acts2{display:flex; gap:8px; flex-wrap:wrap;}
+.hlsheet-acts2 .btn{flex:1 1 auto; padding:8px 10px; font-size:12.5px;}
+.hlsheet-acts2 .btn.danger{color:var(--bad); border-color:var(--bad);}
 
 /* ---------- deeper (想更深) ---------- */
 details.deeper{ display:block; margin:14px 0; border:1.5px solid var(--accent); border-radius:12px; background:var(--surface); overflow:hidden; }

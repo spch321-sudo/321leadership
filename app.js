@@ -38,6 +38,8 @@
       wakeLockOn: "螢幕保持喚醒", exitPrompter: "結束", prev: "上一題", next: "下一題",
       backHome: "首頁", backToc: "目錄", readAloud: "朗讀", pauseAloud: "暫停", resumeAloud: "繼續朗讀", stopAloud: "停止", ttsUnsupported: "這台裝置不支援語音朗讀", ttsLoading: "準備語音中…", fontSizeLabel: "調整字級大小",
       hlAddNote: "加筆記", hlEditNote: "編輯筆記", hlAskXz: "問小智", hlNotePlaceholder: "寫下你的領受或問題…", hlSave: "儲存", hlCancel: "取消", askAboutLine: "關於這一段：「", askAboutLineEnd: "」——",
+      hlSheetTitle: "✍️ 寫下你的領受", hlReflectionPlaceholder: "這句話帶給你什麼領受、感動，或聖靈的提醒？寫下來，把焦點對準耶穌……", hlSaveReflection: "儲存領受", hlClearNote: "刪除領受", hlRemoveHighlight: "移除畫線",
+      hlHint: "💡 讀到聖靈光照、有感動的句子，點一下就能畫線；畫線後再點一下可以寫下你的領受。",
       myths: "領導迷思破解", tracksTitle: "關鍵詞軌跡", occurrences: "次", chaptersSpanned: "課出現",
       checklistTitle: "教導誠信檢核", checklistPickChapter: "選擇要檢核的課別", checklistDone: "已完成",
       journeyTitle: "321旅程地圖", journeyNote: "",
@@ -72,6 +74,8 @@
       wakeLockOn: "萤幕保持唤醒", exitPrompter: "结束", prev: "上一题", next: "下一题",
       backHome: "首页", backToc: "目录", readAloud: "朗读", pauseAloud: "暂停", resumeAloud: "继续朗读", stopAloud: "停止", ttsUnsupported: "这台装置不支持语音朗读", ttsLoading: "准备语音中…", fontSizeLabel: "调整字级大小",
       hlAddNote: "加笔记", hlEditNote: "编辑笔记", hlAskXz: "问小智", hlNotePlaceholder: "写下你的领受或问题…", hlSave: "储存", hlCancel: "取消", askAboutLine: "关于这一段：「", askAboutLineEnd: "」——",
+      hlSheetTitle: "✍️ 写下你的领受", hlReflectionPlaceholder: "这句话带给你什么领受、感动，或圣灵的提醒？写下来，把焦点对准耶稣……", hlSaveReflection: "储存领受", hlClearNote: "删除领受", hlRemoveHighlight: "移除画线",
+      hlHint: "💡 读到圣灵光照、有感动的句子，点一下就能画线；画线后再点一下可以写下你的领受。",
       myths: "领导迷思破解", tracksTitle: "关键词轨迹", occurrences: "次", chaptersSpanned: "课出现",
       checklistTitle: "教导诚信检核", checklistPickChapter: "选择要检核的课别", checklistDone: "已完成",
       journeyTitle: "321旅程地图", journeyNote: "",
@@ -94,7 +98,7 @@
       toolTracks: "Keyword Tracker", toolTracksDesc: "How core terms develop across the book",
       toolChecklist: "Teaching Integrity Check", toolChecklistDesc: "Self-check for leaders/teachers",
       toolPrompter: "Prompter / Group Mode", toolPrompterDesc: "Full-screen + phase timers",
-      companionTitle: "Xiao Zhi · Leadership Coach", companionIntro: "I'm here to help you live out this lesson. Ask me anything about this lesson, or about the 321 vision.",
+      companionTitle: "Sage AI · Leadership Coach", companionIntro: "I'm here to help you live out this lesson. Ask me anything about this lesson, or about the 321 vision.",
       companionPlaceholder: "Type your question…", companionSend: "Send",
       companionNeedNet: "The companion needs an internet connection",
       meHighlights: "My Highlights", meDeclarations: "Declaration Journal", meProgress: "Reading Progress", meSettings: "Settings",
@@ -105,15 +109,17 @@
       startPrompterMsg: "Group Leading Mode", phase: "Phase", question: "Q", closing: "Closing",
       wakeLockOn: "Screen kept awake", exitPrompter: "Exit", prev: "Previous", next: "Next",
       backHome: "Home", backToc: "Contents", readAloud: "Read Aloud", pauseAloud: "Pause", resumeAloud: "Resume", stopAloud: "Stop", ttsUnsupported: "This device does not support read-aloud", ttsLoading: "Preparing audio…", fontSizeLabel: "Adjust font size",
-      hlAddNote: "Add Note", hlEditNote: "Edit Note", hlAskXz: "Ask Xiao Zhi", hlNotePlaceholder: "Write your reflection or question…", hlSave: "Save", hlCancel: "Cancel", askAboutLine: "About this line: “", askAboutLineEnd: "” — ",
+      hlAddNote: "Add Note", hlEditNote: "Edit Note", hlAskXz: "Ask Sage AI", hlNotePlaceholder: "Write your reflection or question…", hlSave: "Save", hlCancel: "Cancel", askAboutLine: "About this line: “", askAboutLineEnd: "” — ",
+      hlSheetTitle: "✍️ Write Your Reflection", hlReflectionPlaceholder: "What reflection, feeling, or prompting from the Holy Spirit does this line stir in you? Write it down, and keep your focus on Jesus……", hlSaveReflection: "Save Reflection", hlClearNote: "Clear Reflection", hlRemoveHighlight: "Remove Highlight",
+      hlHint: "💡 When a line stirs something in you, tap it to highlight it; tap the highlighted line again to write your reflection.",
       myths: "Leadership Myths, Busted", tracksTitle: "Keyword Tracker", occurrences: "occurrences", chaptersSpanned: "lessons",
       checklistTitle: "Teaching Integrity Check", checklistPickChapter: "Choose a lesson to check", checklistDone: "Completed",
       journeyTitle: "321 Journey Map", journeyNote: "",
       tier: { A: "A | Explicit Scripture Teaching", B: "B | Reasoned Theological Inference", C: "C | 321's Applied Language" },
       part: "Part ", of: " of ",
-      companionQsToggle: "💡 Example Questions", companionQsHide: "Hide Example Questions", companionQsHint: "Tap a question to ask Xiao Zhi directly",
+      companionQsToggle: "💡 Example Questions", companionQsHide: "Hide Example Questions", companionQsHint: "Tap a question to ask Sage AI directly",
       msgExpand: "Show more", msgCollapse: "Collapse", msgSave: "Save", msgSaved: "Saved", msgDelete: "Delete", msgDeleteConfirm: "Delete this reply?",
-      meFavorites: "My Saved Replies", meNoFavorites: "No saved replies yet. Tap “Save” under one of Xiao Zhi's answers to keep it here.",
+      meFavorites: "My Saved Replies", meNoFavorites: "No saved replies yet. Tap “Save” under one of Sage AI's answers to keep it here.",
       meFontSize: "Font Size", fontStandard: "Standard", fontLarge: "Large", fontXLarge: "X-Large",
       meVoice: "Reading Voice",
     },
@@ -296,6 +302,13 @@
     [/(?<![0-9])920(?![0-9])/g, "九二零"],
     [/(?<![0-9])235(?![0-9])/g, "二三五"],
   ];
+  // English edition: same brand terms should be read digit-by-digit too ("three two one",
+  // not "three hundred twenty-one"). Same not-adjacent-to-another-digit guard.
+  var TTS_DIGIT_FIXES_EN = [
+    [/(?<![0-9])321(?![0-9])/g, "three two one"],
+    [/(?<![0-9])920(?![0-9])/g, "nine two zero"],
+    [/(?<![0-9])235(?![0-9])/g, "two three five"],
+  ];
   // 「為大／为大」全書幾乎都是「以…為大」「誰願為大」這種「認為是大」的用法，要讀ㄨㄟˊ
   // (wéi)，不是「為了」的ㄨㄟˋ(wèi)；唯一例外是「為大使命」（為了大使命），這裡的「為」
   // 是ㄨㄟˋ，所以用負向前瞻排除掉，其餘一律換成同音字「惟」強制唸成ㄨㄟˊ。
@@ -306,13 +319,87 @@
   // 中式編號「一、」「二、」…唸出來要用自然的口吻帶成「第一，」「第二，」，不是把「、」
   // 前的數字單獨唸出來，聽起來才像真人在說話，不是機械式報數字。
   var TTS_ENUM_FIX = /([一二三四五六七八九十百]+)、/g;
+
+  // ---------------------------------------------------------------
+  // 朗讀時跳過「純經文出處」的括號附註（如「（約翰福音十三章三至五節）」／
+  // "(John 13:3–5)"）——那只是給讀者自己核對用的出處標示，唸出來反而生硬；
+  // 但保留解釋性括號（如「（約20分鐘）」「（我沒有資格談領導）」），因為那些是
+  // 內容的一部分。做法：先看括號裡有沒有「聖經書卷名+數字」，沒有就完全不動；
+  // 有的話，把「書卷+章節」這種出處片段整段拿掉，剩下的內容如果還有東西（代表
+  // 括號裡不只是出處，還夾雜別的說明），就整個括號原封不動保留；如果拿掉出處後
+  // 什麼都不剩，才把整個括號（連同前面的空格）一起刪除。
+  // ---------------------------------------------------------------
+  var BIBLE_BOOKS_ZH = [
+    "創世記", "創", "出埃及記", "出", "利未記", "利", "民數記", "民", "申命記", "申", "約書亞記", "書", "士師記", "士", "路得記", "得",
+    "撒母耳記上", "撒上", "撒母耳記下", "撒下", "列王紀上", "王上", "列王紀下", "王下", "歷代志上", "代上", "歷代志下", "代下",
+    "以斯拉記", "拉", "尼希米記", "尼", "以斯帖記", "斯", "約伯記", "伯", "詩篇", "詩", "箴言", "箴", "傳道書", "傳", "雅歌", "歌",
+    "以賽亞書", "賽", "耶利米書", "耶", "耶利米哀歌", "哀", "以西結書", "結", "但以理書", "但",
+    "何西阿書", "何", "約珥書", "珥", "阿摩司書", "摩", "俄巴底亞書", "俄", "約拿書", "拿", "彌迦書", "彌",
+    "那鴻書", "鴻", "哈巴谷書", "哈", "西番雅書", "番", "哈該書", "該", "撒迦利亞書", "亞", "瑪拉基書", "瑪",
+    "馬太福音", "太", "馬可福音", "可", "路加福音", "路", "約翰福音", "約", "使徒行傳", "徒", "羅馬書", "羅",
+    "哥林多前書", "林前", "哥林多後書", "林後", "加拉太書", "加", "以弗所書", "弗", "腓立比書", "腓",
+    "歌羅西書", "西", "帖撒羅尼迦前書", "帖前", "帖撒羅尼迦後書", "帖後", "提摩太前書", "提前", "提摩太後書", "提後",
+    "提多書", "多", "腓利門書", "門", "希伯來書", "來", "雅各書", "雅",
+    "彼得前書", "彼前", "彼得後書", "彼後", "約翰一書", "約一", "約壹", "約翰二書", "約二", "約貳", "約翰三書", "約三", "約參",
+    "猶大書", "猶", "啟示錄", "啟",
+  ];
+  var BIBLE_BOOKS_ZS = [
+    "创世记", "出埃及记", "利未记", "民数记", "申命记", "约书亚记", "书", "士师记", "路得记",
+    "撒母耳记上", "撒母耳记下", "列王纪上", "列王纪下", "历代志上", "历代志下",
+    "以斯拉记", "尼希米记", "以斯帖记", "约伯记", "诗篇", "诗", "传道书", "传",
+    "以赛亚书", "赛", "耶利米书", "以西结书", "结", "但以理书",
+    "何西阿书", "约珥书", "阿摩司书", "俄巴底亚书", "约拿书", "弥迦书", "弥",
+    "那鸿书", "鸿", "哈巴谷书", "西番雅书", "哈该书", "该", "撒迦利亚书", "亚", "玛拉基书", "玛",
+    "马太福音", "马可福音", "约翰福音", "约", "使徒行传", "罗马书", "罗",
+    "哥林多前书", "哥林多后书", "林后", "加拉太书", "以弗所书", "腓立比书",
+    "歌罗西书", "帖撒罗尼迦前书", "帖撒罗尼迦后书", "帖后", "提摩太前书", "提摩太后书", "提后",
+    "提多书", "腓利门书", "门", "希伯来书", "来", "雅各书",
+    "彼得前书", "彼得后书", "彼后", "约翰一书", "约一", "约壹", "约翰二书", "约二", "约贰", "约翰三书", "约三", "约参",
+    "犹大书", "犹", "启示录", "启",
+  ];
+  var BIBLE_BOOKS_EN = [
+    "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth",
+    "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles",
+    "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Song of Songs",
+    "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel",
+    "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
+    "Matthew", "Mark", "Luke", "John", "Acts", "Romans",
+    "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians",
+    "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon",
+    "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation",
+  ];
+  function bibleBooksAlt(arr) {
+    return arr.slice().sort(function (a, b) { return b.length - a.length; }).join("|");
+  }
+  var BIBLE_ALT_ZH = bibleBooksAlt(BIBLE_BOOKS_ZH);
+  var BIBLE_ALT_ZS = bibleBooksAlt(BIBLE_BOOKS_ZS);
+  var BIBLE_ALT_EN = bibleBooksAlt(BIBLE_BOOKS_EN);
+  function stripScriptureRefParens(text, lang) {
+    var alt = lang === "en" ? BIBLE_ALT_EN : (lang === "zs" ? BIBLE_ALT_ZS : BIBLE_ALT_ZH);
+    if (!alt) return text;
+    var hasBookDigit = new RegExp("(" + alt + ")\\s*[0-9一二三四五六七八九十百千]");
+    var refToken = lang === "en"
+      ? new RegExp("(" + alt + ")\\s+[0-9]{1,3}\\s*[:：]\\s*[0-9]{1,3}(?:\\s*[-–~]\\s*[0-9]{1,3})?", "g")
+      : new RegExp("(" + alt + ")\\s*[一二三四五六七八九十百千0-9]+\\s*章\\s*[一二三四五六七八九十百千0-9]*(?:\\s*[至到\\-–~]\\s*[一二三四五六七八九十百千0-9]+)?\\s*節?", "g");
+    return String(text || "").replace(/\s?[（(]([^（）()]*)[）)]/g, function (m, inner) {
+      if (!hasBookDigit.test(inner)) return m; // no "book name + number" inside → not a reference, leave untouched
+      var t = inner.replace(refToken, "");
+      t = lang === "en" ? t.replace(/\b(and|cf|see)\b/gi, "") : t.replace(/[、，,;；和與与及節章篇上下至到參见見cf]/gi, "");
+      t = t.replace(/[\s\-–~:：]/g, "");
+      return t.length ? m : ""; // anything meaningful left over → keep the whole parenthetical as-is
+    });
+  }
+
   function ttsPronounceFix(text) {
     if (!text) return text;
     var out = String(text);
+    out = stripScriptureRefParens(out, state.lang);
     if (state.lang === "zh" || state.lang === "zs") {
       TTS_DIGIT_FIXES.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
       TTS_WEI_DA_FIX.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
       out = out.replace(TTS_ENUM_FIX, "第$1，");
+    } else if (state.lang === "en") {
+      TTS_DIGIT_FIXES_EN.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
     }
     var fixes = state.lang === "zs" ? TTS_FIX_ZS : (state.lang === "zh" ? TTS_FIX_ZH : null);
     if (!fixes) return out;
@@ -385,6 +472,19 @@
     if (!/[。！？；.!?;]$/.test(s)) s += (state.lang === "en" ? "." : "。");
     return s;
   }
+  // English section headings are numbered "1. The Night…", "2. Emptying Himself…" — reading
+  // the leading digit literally sounds robotic, so for English only, a leading "N. " is
+  // swapped for its spoken ordinal ("First, The Night…"), matching the zh/zs TTS_ENUM_FIX's
+  // "一、"→"第一，" treatment of the exact same fixed 10-section headings.
+  var EN_ORDINALS = ["Zeroth", "First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth", "Eleventh", "Twelfth"];
+  function ttsHeadingOrdinal(heading) {
+    if (state.lang !== "en") return heading;
+    var m = /^(\d{1,2})\.\s*/.exec(heading || "");
+    if (!m) return heading;
+    var n = parseInt(m[1], 10);
+    var word = EN_ORDINALS[n] || (n + ".");
+    return word + ", " + heading.slice(m[0].length);
+  }
   function chapterSpeakChunks(ch) {
     var d = D();
     var bank = d.deeperBank || {};
@@ -403,7 +503,7 @@
     var parts = [ttsEnsureEnd(stripHtml(ch.intro))];
     parts.push(deeperSpeak(anchors["intro"]));
     (ch.sections || []).forEach(function (s) {
-      if (s.heading) parts.push(ttsEnsureEnd(s.heading));
+      if (s.heading) parts.push(ttsEnsureEnd(ttsHeadingOrdinal(s.heading)));
       parts.push(ttsEnsureEnd(stripHtml(s.html)));
       parts.push(deeperSpeak(anchors[String(s.no)]));
     });
@@ -1017,6 +1117,8 @@
     html += '</div>';
 
     html += '<div class="reader">';
+    var hasAnyHighlight = Object.keys(state.user.highlights).some(function (k) { return (state.user.highlights[k] || []).length > 0; });
+    if (!hasAnyHighlight) html += '<div class="hl-hint">' + esc(t().hlHint) + '</div>';
     html += withHighlightAttrs(ch.intro, "intro");
     html += deeperHtml(anchors["intro"]);
     ch.sections.forEach(function (s) {
@@ -1066,67 +1168,116 @@
         }
       });
     });
-    // wire highlight taps + per-highlight note / ask-Xiaozhi actions
+    // wire highlight taps + the "write your reflection" bottom sheet — matching 晨讀321's own
+    // behavior: tap a paragraph once to highlight it (no sheet yet); tap it again (now that
+    // it's highlighted) to open the reflection sheet. Removing a highlight entirely is only
+    // done from inside that sheet's "移除畫線" button — a bare re-tap no longer un-highlights.
     function findHighlight(sec, idx) {
       return (state.user.highlights[chId] || []).find(function (h) { return h.sec === sec && h.idx === idx; });
     }
-    function renderHlExtras(p, sec, idx) {
+    function renderHlNote(p, sec, idx) {
       var next = p.nextElementSibling;
-      if (next && next.classList && next.classList.contains("hl-extras")) next.remove();
+      if (next && next.classList && next.classList.contains("hl-note")) next.remove();
+      var h = findHighlight(sec, idx);
+      if (!h || !h.note) return;
+      var noteEl = document.createElement("div");
+      noteEl.className = "hl-note";
+      noteEl.textContent = "📝 " + h.note;
+      p.parentNode.insertBefore(noteEl, p.nextSibling);
+      noteEl.addEventListener("click", function () { openHlSheet(p, sec, idx); });
+    }
+    function buildAskXzQuestion(sentence, note) {
+      var numFull = ch.numFull;
+      if (state.lang === "en") {
+        return "I'm reading " + numFull + ", and I highlighted this line: “" + sentence + "”. " +
+          (note ? ("My reflection: “" + note + "”. ") : "") +
+          "Please help me understand what this line means for me more deeply, and help me keep my focus on Jesus.";
+      }
+      if (state.lang === "zs") {
+        return "我正在读" + numFull + "，画了这一句：「" + sentence + "」。" +
+          (note ? ("我的领受是：「" + note + "」。") : "") +
+          "请帮我更深地明白这句话对我的意思，也带我把焦点对准耶稣。";
+      }
+      return "我正在讀" + numFull + "，畫了這一句：「" + sentence + "」。" +
+        (note ? ("我的領受是：「" + note + "」。") : "") +
+        "請幫我更深地明白這句話對我的意思，也帶我把焦點對準耶穌。";
+    }
+    function closeHlSheet() {
+      var m = qs(".hlsheet-mask");
+      if (m) m.remove();
+    }
+    function openHlSheet(p, sec, idx) {
       var h = findHighlight(sec, idx);
       if (!h) return;
-      var box = document.createElement("div");
-      box.className = "hl-extras";
-      var noteHtml = h.note ? '<div class="hl-note" data-act="editnote">📝 ' + esc(h.note) + '</div>' : "";
-      box.innerHTML = noteHtml +
-        '<div class="hl-actions">' +
-        '<button type="button" data-act="note">📝 ' + esc(h.note ? t().hlEditNote : t().hlAddNote) + '</button>' +
-        '<button type="button" data-act="ask">💬 ' + esc(t().hlAskXz) + '</button>' +
-        '</div>';
-      p.parentNode.insertBefore(box, p.nextSibling);
-      box.querySelector('[data-act="note"]').addEventListener("click", function () { openNoteEditor(box, p, sec, idx); });
-      var noteEl = box.querySelector(".hl-note");
-      if (noteEl) noteEl.addEventListener("click", function () { openNoteEditor(box, p, sec, idx); });
-      box.querySelector('[data-act="ask"]').addEventListener("click", function () {
-        pendingAsk = t().askAboutLine + p.textContent.slice(0, 140) + t().askAboutLineEnd;
-        navigate("#/companion/" + chId);
-      });
-    }
-    function openNoteEditor(box, p, sec, idx) {
-      var h = findHighlight(sec, idx);
-      var existing = h && h.note ? h.note : "";
-      box.innerHTML = '<div class="hl-noteedit">' +
-        '<textarea rows="2" placeholder="' + esc(t().hlNotePlaceholder) + '">' + esc(existing) + '</textarea>' +
-        '<div class="hl-noteedit-btns"><button type="button" data-act="save" class="btn gold">' + esc(t().hlSave) + '</button>' +
-        '<button type="button" data-act="cancel" class="btn">' + esc(t().hlCancel) + '</button></div></div>';
-      var ta = box.querySelector("textarea");
-      ta.focus();
-      box.querySelector('[data-act="save"]').addEventListener("click", function () {
+      closeHlSheet();
+      var sentence = p.textContent.slice(0, 200);
+      var mask = document.createElement("div");
+      mask.className = "hlsheet-mask";
+      mask.innerHTML = '<div class="hlsheet-card">' +
+        '<div class="hlsheet-title">' + esc(t().hlSheetTitle) + '</div>' +
+        '<div class="hlsheet-quote">' + esc(sentence) + '</div>' +
+        '<textarea class="hlsheet-ta" placeholder="' + esc(t().hlReflectionPlaceholder) + '">' + esc(h.note || "") + '</textarea>' +
+        '<div class="hlsheet-acts">' +
+        '<button type="button" data-act="save" class="btn gold">' + esc(t().hlSaveReflection) + '</button>' +
+        '<button type="button" data-act="ask" class="btn primary">✨ ' + esc(t().hlAskXz) + '</button>' +
+        '</div>' +
+        '<div class="hlsheet-acts2">' +
+        '<button type="button" data-act="clearnote" class="btn">' + esc(t().hlClearNote) + '</button>' +
+        '<button type="button" data-act="remove" class="btn danger">' + esc(t().hlRemoveHighlight) + '</button>' +
+        '<button type="button" data-act="cancel" class="btn">' + esc(t().hlCancel) + '</button>' +
+        '</div></div>';
+      document.body.appendChild(mask);
+      mask.addEventListener("click", function (e) { if (e.target === mask) closeHlSheet(); });
+      var ta = mask.querySelector(".hlsheet-ta");
+      setTimeout(function () { ta.focus(); }, 60);
+      mask.querySelector('[data-act="save"]').addEventListener("click", function () {
         var hh = findHighlight(sec, idx);
         if (hh) { hh.note = (ta.value || "").trim(); saveUser(); }
-        renderHlExtras(p, sec, idx);
+        closeHlSheet();
+        renderHlNote(p, sec, idx);
       });
-      box.querySelector('[data-act="cancel"]').addEventListener("click", function () { renderHlExtras(p, sec, idx); });
+      mask.querySelector('[data-act="ask"]').addEventListener("click", function () {
+        var note = (ta.value || "").trim();
+        var hh = findHighlight(sec, idx);
+        if (hh) { hh.note = note; saveUser(); } // keep whatever reflection was just typed, same as Save would
+        pendingAsk = buildAskXzQuestion(sentence, note);
+        pendingAskAutoSend = true;
+        closeHlSheet();
+        navigate("#/companion/" + chId);
+      });
+      mask.querySelector('[data-act="clearnote"]').addEventListener("click", function () {
+        var hh = findHighlight(sec, idx);
+        if (hh) { hh.note = ""; saveUser(); }
+        closeHlSheet();
+        renderHlNote(p, sec, idx);
+      });
+      mask.querySelector('[data-act="remove"]').addEventListener("click", function () {
+        var arr = state.user.highlights[chId] || [];
+        var i = arr.findIndex(function (hh) { return hh.sec === sec && hh.idx === idx; });
+        if (i >= 0) arr.splice(i, 1);
+        saveUser();
+        p.removeAttribute("data-hl");
+        var next = p.nextElementSibling;
+        if (next && next.classList && next.classList.contains("hl-note")) next.remove();
+        closeHlSheet();
+      });
+      mask.querySelector('[data-act="cancel"]').addEventListener("click", closeHlSheet);
     }
     qsa(".reader p[data-sec]", view).forEach(function (p) {
       var sec0 = p.getAttribute("data-sec"), idx0 = parseInt(p.getAttribute("data-idx"), 10);
-      if (findHighlight(sec0, idx0)) renderHlExtras(p, sec0, idx0);
+      if (findHighlight(sec0, idx0)) renderHlNote(p, sec0, idx0);
       p.addEventListener("click", function (e) {
-        if (e.target.closest("a") || e.target.closest(".hl-extras")) return;
+        if (e.target.closest("a") || e.target.closest(".hl-note")) return;
         var sec = p.getAttribute("data-sec"), idx = parseInt(p.getAttribute("data-idx"), 10);
         var arr = state.user.highlights[chId] = state.user.highlights[chId] || [];
         var existingIdx = arr.findIndex(function (h) { return h.sec === sec && h.idx === idx; });
         if (existingIdx >= 0) {
-          arr.splice(existingIdx, 1);
-          p.removeAttribute("data-hl");
-          var next = p.nextElementSibling;
-          if (next && next.classList && next.classList.contains("hl-extras")) next.remove();
+          openHlSheet(p, sec, idx);
         } else {
           arr.push({ sec: sec, idx: idx, text: p.textContent.slice(0, 120), at: Date.now(), lang: state.lang, chId: chId, chTitle: ch.title });
           p.setAttribute("data-hl", "1");
-          renderHlExtras(p, sec, idx);
+          saveUser();
         }
-        saveUser();
       });
     });
     // wire mark done
@@ -1427,6 +1578,7 @@
   var chatSession = { messages: [] };
   var XIAOZHI_ENDPOINT = "https://xiaozhi-proxy.spch321.workers.dev";
   var pendingAsk = null; // set by "ask Xiaozhi about this line" from a highlighted paragraph
+  var pendingAskAutoSend = false; // when true, renderCompanion sends pendingAsk immediately instead of just pre-filling it
   var msgIdSeq = 0;
   function newMsgId() { msgIdSeq++; return "m" + Date.now().toString(36) + msgIdSeq; }
 
@@ -1436,7 +1588,7 @@
     var base = {
       zh: "你是「小智」，《321建造 教會領導力》App內的AI陪讀，人設是一位謙卑、有盼望、充滿愛心的「321領導力教練」。準則：①任何回答最終必須指向耶穌的榜樣、聖經的准則、聖靈的引導，不能只停留在321術語的自我循環論證；②回答涉及神學推論時，誠實標示層級——A為聖經明文教導，B為可討論的神學推論需說明「這是我的理解，歡迎與牧者再確認」，C為321的應用性語言需說明「這是321的應用性理解」；③遇到讀者具體人生抉擇（換工作、婚姻、離開教會等），引導讀者用321原則自己思考、鼓勵與屬靈父母／小組尋求印證，不直接替讀者下判斷；④所有經文引用一律使用和合本繁體中文；⑤語氣謙卑、盼望、帶著愛心，避免說教與居高臨下，用心不用腦；⑥這是手機聊天介面，版面要美觀、簡單、易讀：整則回覆整體字數盡量精簡（一般問題約150-250字為佳，除非讀者明確要求詳細說明），標題只在真的需要分段時偶爾使用一個「##」等級的小標題，不要每段都加標題，不用把全部內容都塞進表格，優先用簡短的段落與條列，重點文字適度加粗即可，避免過度使用巢狀項目符號或多層表格。",
       zs: "你是「小智」，《321建造 教会领导力》App内的AI陪读，人设是一位谦卑、有盼望、充满爱心的「321领导力教练」。准则：①任何回答最终必须指向耶稣的榜样、圣经的准则、圣灵的引导，不能只停留在321术语的自我循环论证；②回答涉及神学推论时，诚实标示层级——A为圣经明文教导，B为可讨论的神学推论需说明「这是我的理解，欢迎与牧者再确认」，C为321的应用性语言需说明「这是321的应用性理解」；③遇到读者具体人生抉择，引导读者用321原则自己思考、鼓励与属灵父母／小组寻求印证，不直接替读者下判断；④所有经文引用一律使用和合本简体中文；⑤语气谦卑、盼望、带着爱心，避免说教与居高临下；⑥这是手机聊天界面，版面要美观、简单、易读：整则回复整体字数尽量精简（一般问题约150-250字为佳，除非读者明确要求详细说明），标题只在真的需要分段时偶尔使用一个「##」等级的小标题，不要每段都加标题，不用把全部内容都塞进表格，优先用简短的段落与条列，重点文字适度加粗即可，避免过度使用嵌套项目符号或多层表格。",
-      en: "You are 'Xiao Zhi,' the AI companion inside the Building on 321: Church Leadership app — a humble, hopeful, loving '321 Leadership Coach.' Guidelines: (1) Every answer must ultimately point to Jesus as example, Scripture as standard, and the Holy Spirit as guide — never stay circular within 321's own vocabulary; (2) when reasoning theologically, honestly mark confidence: A = explicit Scripture teaching, B = a reasoned theological inference — say 'this is my understanding, please confirm with your pastor,' C = 321's own applied language — say 'this is 321's applied framing'; (3) for concrete life decisions (a job change, marriage, leaving a church), guide the reader to think it through using 321's principles and to seek confirmation from spiritual parents/small group — never decide for them; (4) quote Scripture using the ESV (or WEB where noted) for English; (5) tone: humble, hopeful, loving — never preachy or condescending; (6) this is a mobile chat interface — keep replies clean, simple and easy to read: keep the overall length concise (roughly 100-180 words for an ordinary question, unless the reader explicitly asks for more depth), use at most an occasional small '##'-level heading only when a real section break helps (never one per paragraph), don't force everything into a table, prefer short paragraphs and simple bullet lists, use bold sparingly for genuinely key words, and avoid deeply nested lists or multi-level tables.",
+      en: "You are 'Sage AI,' the AI companion inside the Building on 321: Church Leadership app — a humble, hopeful, loving '321 Leadership Coach.' Guidelines: (1) Every answer must ultimately point to Jesus as example, Scripture as standard, and the Holy Spirit as guide — never stay circular within 321's own vocabulary; (2) when reasoning theologically, honestly mark confidence: A = explicit Scripture teaching, B = a reasoned theological inference — say 'this is my understanding, please confirm with your pastor,' C = 321's own applied language — say 'this is 321's applied framing'; (3) for concrete life decisions (a job change, marriage, leaving a church), guide the reader to think it through using 321's principles and to seek confirmation from spiritual parents/small group — never decide for them; (4) quote Scripture using the ESV (or WEB where noted) for English; (5) tone: humble, hopeful, loving — never preachy or condescending; (6) this is a mobile chat interface — keep replies clean, simple and easy to read: keep the overall length concise (roughly 100-180 words for an ordinary question, unless the reader explicitly asks for more depth), use at most an occasional small '##'-level heading only when a real section break helps (never one per paragraph), don't force everything into a table, prefer short paragraphs and simple bullet lists, use bold sparingly for genuinely key words, and avoid deeply nested lists or multi-level tables.",
     }[state.lang];
     if (ch) {
       var ctx = state.lang === "en"
@@ -1566,8 +1718,9 @@
     var chatInEl = qs("#chatIn", view);
     if (pendingAsk) {
       chatInEl.value = pendingAsk;
-      pendingAsk = null;
-      setTimeout(function () { chatInEl.focus(); }, 0);
+      var autoSend = pendingAskAutoSend;
+      pendingAsk = null; pendingAskAutoSend = false;
+      if (autoSend) { sendChat(chId2); } else { setTimeout(function () { chatInEl.focus(); }, 0); }
     }
     qs("#chatSend", view).addEventListener("click", function () { sendChat(chId2); });
     chatInEl.addEventListener("keydown", function (e) {
