@@ -311,7 +311,11 @@ html[data-lang="en"] .mythcard .t::before{content:"Truth: ";}
 
 /* ---------- prompter ---------- */
 #prompter{position:fixed; inset:0; background:var(--ink); color:#F5F1E6; z-index:9000; display:flex; flex-direction:column;}
-#prompter .ptop{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; font-size:13px; opacity:.8;}
+#prompter .ptop{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; font-size:13px; opacity:.8;}
+#prompter .ptop span{flex:1; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+#prompter .ptop .ptimer{flex:0 0 auto; text-align:right;}
+#prompter #pClose{flex:0 0 auto; width:32px; height:32px; line-height:32px; padding:0; border:none; background:transparent; color:#F5F1E6; font-size:18px; opacity:.75; text-align:center;}
+#prompter #pClose:active{opacity:1;}
 #prompter .pbody{flex:1; overflow-y:auto; padding:20px 26px 40px; display:flex; flex-direction:column; justify-content:center;}
 #prompter .ptitle{font-size:13px; color:#D4A65B; font-weight:700; margin-bottom:10px;}
 #prompter .pq{font-size:clamp(20px,5vw,30px); line-height:1.6; font-weight:600;}

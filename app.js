@@ -35,7 +35,7 @@
       themeLight: "淺色", themeDark: "深色", themeAuto: "跟隨系統",
       writeDeclaration: "寫下你的宣告", saveDecl: "儲存宣告", declSaved: "已儲存",
       startPrompterMsg: "小組帶領模式", phase: "階段", question: "題", closing: "收尾",
-      wakeLockOn: "螢幕保持喚醒", exitPrompter: "結束", prev: "上一題", next: "下一題",
+      wakeLockOn: "螢幕保持喚醒", exitPrompter: "結束", promptClose: "退出", prev: "上一題", next: "下一題",
       backHome: "首頁", backToc: "目錄", readAloud: "朗讀", pauseAloud: "暫停", resumeAloud: "繼續朗讀", stopAloud: "停止", ttsUnsupported: "這台裝置不支援語音朗讀", ttsLoading: "準備語音中…", fontSizeLabel: "調整字級大小",
       hlAddNote: "加筆記", hlEditNote: "編輯筆記", hlAskXz: "問小智", hlNotePlaceholder: "寫下你的領受或問題…", hlSave: "儲存", hlCancel: "取消", askAboutLine: "關於這一段：「", askAboutLineEnd: "」——",
       hlSheetTitle: "✍️ 寫下你的領受", hlReflectionPlaceholder: "這句話帶給你什麼領受、感動，或聖靈的提醒？寫下來，把焦點對準耶穌……", hlSaveReflection: "儲存領受", hlClearNote: "刪除領受", hlRemoveHighlight: "移除畫線", hlColorLabel: "畫線顏色",
@@ -71,7 +71,7 @@
       themeLight: "浅色", themeDark: "深色", themeAuto: "跟随系统",
       writeDeclaration: "写下你的宣告", saveDecl: "储存宣告", declSaved: "已储存",
       startPrompterMsg: "小组带领模式", phase: "阶段", question: "题", closing: "收尾",
-      wakeLockOn: "萤幕保持唤醒", exitPrompter: "结束", prev: "上一题", next: "下一题",
+      wakeLockOn: "萤幕保持唤醒", exitPrompter: "结束", promptClose: "退出", prev: "上一题", next: "下一题",
       backHome: "首页", backToc: "目录", readAloud: "朗读", pauseAloud: "暂停", resumeAloud: "继续朗读", stopAloud: "停止", ttsUnsupported: "这台装置不支持语音朗读", ttsLoading: "准备语音中…", fontSizeLabel: "调整字级大小",
       hlAddNote: "加笔记", hlEditNote: "编辑笔记", hlAskXz: "问小智", hlNotePlaceholder: "写下你的领受或问题…", hlSave: "储存", hlCancel: "取消", askAboutLine: "关于这一段：「", askAboutLineEnd: "」——",
       hlSheetTitle: "✍️ 写下你的领受", hlReflectionPlaceholder: "这句话带给你什么领受、感动，或圣灵的提醒？写下来，把焦点对准耶稣……", hlSaveReflection: "储存领受", hlClearNote: "删除领受", hlRemoveHighlight: "移除画线", hlColorLabel: "画线颜色",
@@ -107,7 +107,7 @@
       themeLight: "Light", themeDark: "Dark", themeAuto: "System",
       writeDeclaration: "Write your declaration", saveDecl: "Save Declaration", declSaved: "Saved",
       startPrompterMsg: "Group Leading Mode", phase: "Phase", question: "Q", closing: "Closing",
-      wakeLockOn: "Screen kept awake", exitPrompter: "Exit", prev: "Previous", next: "Next",
+      wakeLockOn: "Screen kept awake", exitPrompter: "Exit", promptClose: "Exit", prev: "Previous", next: "Next",
       backHome: "Home", backToc: "Contents", readAloud: "Read Aloud", pauseAloud: "Pause", resumeAloud: "Resume", stopAloud: "Stop", ttsUnsupported: "This device does not support read-aloud", ttsLoading: "Preparing audio…", fontSizeLabel: "Adjust font size",
       hlAddNote: "Add Note", hlEditNote: "Edit Note", hlAskXz: "Ask Sage AI", hlNotePlaceholder: "Write your reflection or question…", hlSave: "Save", hlCancel: "Cancel", askAboutLine: "About this line: “", askAboutLineEnd: "” — ",
       hlSheetTitle: "✍️ Write Your Reflection", hlReflectionPlaceholder: "What reflection, feeling, or prompting from the Holy Spirit does this line stir in you? Write it down, and keep your focus on Jesus……", hlSaveReflection: "Save Reflection", hlClearNote: "Clear Reflection", hlRemoveHighlight: "Remove Highlight", hlColorLabel: "Highlight Color",
@@ -321,10 +321,16 @@
   // 321專用術語的數字要「逐字讀」（3-2-1／9-2-0／2-3-5），不是唸成整數
   // （如「三百二十一」）。用正則把獨立出現的321/920/235換成逐字的中文數字，
   // 只在zh／zs生效；(?<![0-9])…(?![0-9]) 確保不會誤觸更長數字（如1920、2350）中的子字串。
+  // v1.3.12修正：全書絕大多數321/920/235其實是緊接著中文字的品牌複合詞（「321理念」「321建造」
+  // 「國度321空中團契」「920的操練」等），把它們硬拆成三個獨立漢字數字（三二一）朗讀時，
+  // 語音引擎容易唸成刻意分開、有停頓的「倒數」語氣（三…二…一…），聽起來斷斷續續、不自然；
+  // 改成只在321/920/235「不」緊接著另一個中文字時才逐字轉換（也就是後面接標點、引號、空白或
+  // 句尾的情況，例如獨立出現的「3-2-1」），緊接著中文字的品牌複合詞則保留阿拉伯數字原樣，交給
+  // 語音引擎自己用更自然的語速念出（不會被誤讀成整數三百二十一，因為後面接的是抽象名詞而非量詞）。
   var TTS_DIGIT_FIXES = [
-    [/(?<![0-9])321(?![0-9])/g, "三二一"],
-    [/(?<![0-9])920(?![0-9])/g, "九二零"],
-    [/(?<![0-9])235(?![0-9])/g, "二三五"],
+    [/(?<![0-9])321(?![0-9一-鿿])/g, "三二一"],
+    [/(?<![0-9])920(?![0-9一-鿿])/g, "九二零"],
+    [/(?<![0-9])235(?![0-9一-鿿])/g, "二三五"],
   ];
   // English edition: same brand terms should be read digit-by-digit too ("three two one",
   // not "three hundred twenty-one"). Same not-adjacent-to-another-digit guard.
@@ -1749,7 +1755,7 @@
     var total = ps.items.length;
     var cur = ps.items[ps.idx];
 
-    var html = '<div class="ptop"><span>' + esc(ch.numFull) + ' · ' + esc(t().startPrompterMsg) + '</span><span class="ptimer" id="pTimer">00:00</span></div>';
+    var html = '<div class="ptop"><button id="pClose" aria-label="' + esc(t().promptClose) + '">✕</button><span>' + esc(ch.numFull) + ' · ' + esc(t().startPrompterMsg) + '</span><span class="ptimer" id="pTimer">00:00</span></div>';
     html += '<div class="pdots">';
     ps.items.forEach(function (it, i) {
       html += '<i class="' + (i < ps.idx ? "done" : (i === ps.idx ? "now" : "")) + '"></i>';
@@ -1765,6 +1771,7 @@
     html += '</div>';
     el.innerHTML = html;
 
+    qs("#pClose", el).addEventListener("click", exitPrompter);
     qs("#pPrev", el).addEventListener("click", function () { if (ps.idx > 0) { ps.idx--; renderPrompterFrame(); } });
     qs("#pNext", el).addEventListener("click", function () {
       if (ps.idx === total - 1) { exitPrompter(); return; }
