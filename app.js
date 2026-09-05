@@ -46,6 +46,7 @@
       companionQsToggle: "💡 範例問題", companionQsHide: "收起範例問題", companionQsHint: "點一下問題，直接問小智",
       msgExpand: "展開全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "刪除", msgDeleteConfirm: "要刪除這則回覆嗎？",
       meFavorites: "我的收藏", meNoFavorites: "還沒有收藏。在陪讀對話中點一下「收藏」，把小智的回答留下來。",
+      meFontSize: "字級大小", fontStandard: "標準", fontLarge: "大", fontXLarge: "特大",
     },
     zs: {
       brand: "321领导力", tabToday: "今日", tabCourse: "课程", tabTools: "工具", tabCompanion: "陪读", tabMe: "我的",
@@ -78,6 +79,7 @@
       companionQsToggle: "💡 范例问题", companionQsHide: "收起范例问题", companionQsHint: "点一下问题，直接问小智",
       msgExpand: "展开全部", msgCollapse: "收合", msgSave: "收藏", msgSaved: "已收藏", msgDelete: "删除", msgDeleteConfirm: "要删除这则回复吗？",
       meFavorites: "我的收藏", meNoFavorites: "还没有收藏。在陪读对话中点一下「收藏」，把小智的回答留下来。",
+      meFontSize: "字级大小", fontStandard: "标准", fontLarge: "大", fontXLarge: "特大",
     },
     en: {
       brand: "321 Leadership", tabToday: "Today", tabCourse: "Lessons", tabTools: "Tools", tabCompanion: "Companion", tabMe: "Me",
@@ -110,6 +112,7 @@
       companionQsToggle: "💡 Example Questions", companionQsHide: "Hide Example Questions", companionQsHint: "Tap a question to ask Xiao Zhi directly",
       msgExpand: "Show more", msgCollapse: "Collapse", msgSave: "Save", msgSaved: "Saved", msgDelete: "Delete", msgDeleteConfirm: "Delete this reply?",
       meFavorites: "My Saved Replies", meNoFavorites: "No saved replies yet. Tap “Save” under one of Xiao Zhi's answers to keep it here.",
+      meFontSize: "Font Size", fontStandard: "Standard", fontLarge: "Large", fontXLarge: "X-Large",
     },
   };
 
@@ -155,11 +158,12 @@
       if (cls) document.documentElement.classList.add(cls);
     } catch (e) {}
   }
-  function cycleFont() {
-    state.font = (state.font + 1) % 3;
+  function setFont(n) {
+    state.font = n;
     try { localStorage.setItem(FONT_KEY, String(state.font)); } catch (e) {}
     applyFont();
   }
+  function cycleFont() { setFont((state.font + 1) % 3); }
   window.cycleFont = cycleFont;
 
   // ---------------------------------------------------------------
@@ -198,6 +202,7 @@
     ["收藏", "收常"], ["躲藏", "躲常"], ["西藏", "西葬"], ["寶藏", "寶葬"],
     ["差別", "叉別"], ["很差", "很岔"], ["差點", "岔點"], ["出差", "出柴"], ["公差", "公柴"], ["參差", "參呲"],
     ["長短", "常短"], ["長江", "常江"], ["長大", "掌大"], ["校長", "校掌"],
+    ["組長", "組掌"], ["長執", "掌執"], ["長老", "掌老"], ["家長", "家掌"], ["增長", "增掌"], ["長進", "掌進"], ["部長", "部掌"],
     ["倒車", "道車"], ["倒茶", "道茶"], ["跌倒", "跌島"], ["公司倒閉", "公司島閉"],
     ["得到", "德到"], ["你得加油", "你歹加油"], ["跑得快", "跑的快"],
     ["的確", "敵確"], ["目的", "目地"],
@@ -237,6 +242,7 @@
     ["收藏", "收常"], ["躲藏", "躲常"], ["西藏", "西葬"], ["宝藏", "宝葬"],
     ["差别", "叉别"], ["很差", "很岔"], ["差点", "岔点"], ["出差", "出柴"], ["公差", "公柴"], ["参差", "参呲"],
     ["长短", "常短"], ["长江", "常江"], ["长大", "掌大"], ["校长", "校掌"],
+    ["组长", "组掌"], ["长执", "掌执"], ["长老", "掌老"], ["家长", "家掌"], ["增长", "增掌"], ["长进", "掌进"], ["部长", "部掌"],
     ["倒车", "道车"], ["倒茶", "道茶"], ["跌倒", "跌岛"], ["公司倒闭", "公司岛闭"],
     ["得到", "德到"], ["你得加油", "你歹加油"], ["跑得快", "跑的快"],
     ["的确", "敌确"], ["目的", "目地"],
@@ -268,11 +274,23 @@
     [/(?<![0-9])920(?![0-9])/g, "九二零"],
     [/(?<![0-9])235(?![0-9])/g, "二三五"],
   ];
+  // 「為大／为大」全書幾乎都是「以…為大」「誰願為大」這種「認為是大」的用法，要讀ㄨㄟˊ
+  // (wéi)，不是「為了」的ㄨㄟˋ(wèi)；唯一例外是「為大使命」（為了大使命），這裡的「為」
+  // 是ㄨㄟˋ，所以用負向前瞻排除掉，其餘一律換成同音字「惟」強制唸成ㄨㄟˊ。
+  var TTS_WEI_DA_FIX = [
+    [/為大(?!使命)/g, "惟大"],
+    [/为大(?!使命)/g, "惟大"],
+  ];
+  // 中式編號「一、」「二、」…唸出來要用自然的口吻帶成「第一，」「第二，」，不是把「、」
+  // 前的數字單獨唸出來，聽起來才像真人在說話，不是機械式報數字。
+  var TTS_ENUM_FIX = /([一二三四五六七八九十百]+)、/g;
   function ttsPronounceFix(text) {
     if (!text) return text;
     var out = String(text);
     if (state.lang === "zh" || state.lang === "zs") {
       TTS_DIGIT_FIXES.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
+      TTS_WEI_DA_FIX.forEach(function (pair) { out = out.replace(pair[0], pair[1]); });
+      out = out.replace(TTS_ENUM_FIX, "第$1，");
     }
     var fixes = state.lang === "zs" ? TTS_FIX_ZS : (state.lang === "zh" ? TTS_FIX_ZH : null);
     if (!fixes) return out;
@@ -280,9 +298,13 @@
     return out;
   }
 
+  // `curKey` identifies WHAT is currently playing ("ch:ch01" for a chapter, "msg:<id>" for
+  // one companion reply) so any number of 🔊 buttons across the app can each independently
+  // know whether they're the one that's active, instead of there being only one hardcoded
+  // chapter-toolbar button.
   var spk = {
     supported: (typeof window !== "undefined" && "speechSynthesis" in window),
-    active: false, paused: false, mode: "", queue: [], idx: 0, token: 0, curChId: null, audio: null,
+    active: false, paused: false, loading: false, mode: "", queue: [], idx: 0, token: 0, curKey: null, audio: null, title: "",
   };
 
   function spkGetAudio() {
@@ -363,33 +385,130 @@
     return spkChunks(ttsPronounceFix(parts.join(" ")));
   }
   function ttsVoiceName() { return TTS_VOICE_BY_LANG[state.lang] || TTS_VOICE_BY_LANG.zh; }
-  function yunFetch(piece) {
-    return fetch(TTS_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ voice: ttsVoiceName(), rate: "+0%", sil: TTS_SIL_SENTENCE, silc: TTS_SIL_COMMA, sile: TTS_SIL_ENUM, text: piece }),
-    }).then(function (res) {
-      if (!res.ok) throw new Error("TTS HTTP " + res.status);
-      return res.blob();
-    }).then(function (blob) { return URL.createObjectURL(blob); });
+
+  // ---------------------------------------------------------------
+  // Pre-download + single continuous file + background playback.
+  //
+  // The old approach fetched and played one chunk at a time (fetch → play → wait for
+  // "onended" → fetch the next chunk), which is exactly what produced the reported
+  // "斷斷續續" choppiness: a live network round-trip sits between every chunk. Now every
+  // chunk for the whole reading is fetched up front (a few at a time, cached on-device
+  // afterward via the Cache Storage API), concatenated into ONE audio Blob, and played
+  // back through a single <audio> element start-to-finish — no per-chunk gaps, and a
+  // reopened chapter/reply plays instantly offline from cache without hitting the network
+  // again. A single long-lived <audio> element (rather than one swapped out per chunk) is
+  // also what lets iOS keep the audio going in the background / on the lock screen, backed
+  // by the MediaSession wiring in speakStart() below.
+  // ---------------------------------------------------------------
+  var TTS_AUDIO_CACHE = "l321-tts-audio-v3";
+  function ttsCacheKeyFor(voice, rate, text) {
+    // Cache Storage keys on a Request/URL, not a hash — synthesize one deterministically
+    // from voice+rate+text (no hashing library needed) so identical text always maps to
+    // the same cache entry, and a changed voice/rate never collides with an old one.
+    var h = 0;
+    for (var i = 0; i < text.length; i++) { h = ((h << 5) - h + text.charCodeAt(i)) | 0; }
+    return TTS_ENDPOINT + "?voice=" + encodeURIComponent(voice) + "&rate=" + encodeURIComponent(rate) + "&h=" + h + "&n=" + text.length;
   }
-  function updateSpeakButton() {
-    var btn = qs("#chSpeakBtn");
-    if (!btn) return;
-    if (spk.active && !spk.paused) {
-      btn.setAttribute("data-state", "playing"); btn.textContent = "⏸"; btn.setAttribute("aria-label", t().pauseAloud);
-    } else if (spk.active && spk.paused) {
-      btn.setAttribute("data-state", "paused"); btn.textContent = "▶"; btn.setAttribute("aria-label", t().resumeAloud);
-    } else {
-      btn.setAttribute("data-state", "idle"); btn.textContent = "🔊"; btn.setAttribute("aria-label", t().readAloud);
-    }
+  function yunFetchBuffer(piece) {
+    var voice = ttsVoiceName(), rate = "+0%";
+    var canCache = ("caches" in window) && ("Request" in window);
+    var req = canCache ? new Request(ttsCacheKeyFor(voice, rate, piece)) : null;
+    var openCache = canCache ? caches.open(TTS_AUDIO_CACHE).catch(function () { return null; }) : Promise.resolve(null);
+    return openCache.then(function (cache) {
+      var matchP = (cache && req) ? cache.match(req) : Promise.resolve(null);
+      return matchP.then(function (cached) {
+        if (cached) return cached.arrayBuffer();
+        return fetch(TTS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ voice: voice, rate: rate, sil: TTS_SIL_SENTENCE, silc: TTS_SIL_COMMA, sile: TTS_SIL_ENUM, text: piece }),
+        }).then(function (res) {
+          if (!res.ok) throw new Error("TTS HTTP " + res.status);
+          var resForCache = (cache && req) ? res.clone() : null;
+          return res.arrayBuffer().then(function (buf) {
+            // Wait for the cache write to actually land before resolving — otherwise an
+            // immediate re-read (e.g. re-opening the same chapter right away) can race
+            // ahead of the write and miss the cache even though this exact chunk was just
+            // fetched a moment ago.
+            if (resForCache) {
+              return Promise.resolve(cache.put(req, resForCache)).catch(function () {}).then(function () { return buf; });
+            }
+            return buf;
+          });
+        });
+      });
+    });
+  }
+  // Fetches every chunk (a few in flight at once — fast, but doesn't hammer the Worker),
+  // in original order, then concatenates them into one Blob once ALL of them have arrived.
+  function ttsBuildFullAudio(myToken, queue) {
+    if (!queue.length) return Promise.resolve(null);
+    var CONCURRENCY = 3;
+    var buffers = new Array(queue.length);
+    var nextIdx = 0, doneCount = 0, failed = false;
+    return new Promise(function (resolve, reject) {
+      function pump() {
+        if (failed || myToken !== spk.token) return;
+        if (nextIdx >= queue.length) return;
+        var i = nextIdx++;
+        yunFetchBuffer(queue[i]).then(function (buf) {
+          if (failed || myToken !== spk.token) return;
+          buffers[i] = buf;
+          doneCount++;
+          if (doneCount >= queue.length) resolve(new Blob(buffers, { type: "audio/mpeg" }));
+          else pump();
+        }).catch(function (err) {
+          if (failed) return;
+          failed = true;
+          reject(err);
+        });
+      }
+      for (var c = 0; c < CONCURRENCY && c < queue.length; c++) pump();
+    });
+  }
+  function setupMediaSession(title) {
+    try {
+      if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
+      navigator.mediaSession.metadata = new MediaMetadata({ title: title || t().brand, artist: t().brand });
+      navigator.mediaSession.playbackState = "playing";
+      navigator.mediaSession.setActionHandler("play", function () { try { spkGetAudio().play(); } catch (e) {} });
+      navigator.mediaSession.setActionHandler("pause", function () { try { spkGetAudio().pause(); } catch (e) {} });
+      navigator.mediaSession.setActionHandler("stop", function () { spkStopAll(); });
+    } catch (e) {}
+  }
+  // Every 🔊 button in the currently-rendered view (the chapter toolbar's, or one per
+  // companion reply) carries a data-speak-key; whichever one matches spk.curKey shows
+  // playing/paused, every other one shows idle — so any number of them can coexist.
+  function updateSpeakButtons() {
+    qsa("[data-speak-key]").forEach(function (btn) {
+      var key = btn.getAttribute("data-speak-key");
+      if (spk.active && spk.curKey === key) {
+        if (spk.loading) {
+          btn.setAttribute("data-state", "loading"); btn.textContent = "⏳"; btn.setAttribute("aria-label", t().ttsLoading);
+          return;
+        }
+        btn.setAttribute("data-state", spk.paused ? "paused" : "playing");
+        btn.textContent = spk.paused ? "▶" : "⏸";
+        btn.setAttribute("aria-label", spk.paused ? t().resumeAloud : t().pauseAloud);
+      } else {
+        btn.setAttribute("data-state", "idle");
+        btn.textContent = "🔊";
+        btn.setAttribute("aria-label", t().readAloud);
+      }
+    });
   }
   function spkStopAll() {
     spk.token++;
-    spk.active = false; spk.paused = false; spk.mode = ""; spk.queue = []; spk.idx = 0; spk.curChId = null;
-    try { if (spk.audio) { spk.audio.pause(); spk.audio.onended = null; spk.audio.onerror = null; } } catch (e) {}
+    spk.active = false; spk.paused = false; spk.loading = false; spk.mode = ""; spk.queue = []; spk.idx = 0; spk.curKey = null; spk.title = "";
+    try {
+      if (spk.audio) {
+        spk.audio.pause(); spk.audio.onended = null; spk.audio.onerror = null;
+        if (spk.audio.src) { URL.revokeObjectURL(spk.audio.src); spk.audio.removeAttribute("src"); }
+      }
+    } catch (e) {}
     try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
-    updateSpeakButton();
+    try { if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none"; } catch (e) {}
+    updateSpeakButtons();
   }
   function spkPlayNativeQueue(myToken) {
     if (myToken !== spk.token || spk.paused) return;
@@ -401,40 +520,37 @@
     utter.onerror = function () { if (myToken === spk.token) spkStopAll(); };
     try { window.speechSynthesis.speak(utter); } catch (e) { spkStopAll(); }
   }
-  function spkPlayAzureQueue(myToken) {
-    if (myToken !== spk.token || spk.paused) return;
-    if (spk.idx >= spk.queue.length) { spkStopAll(); return; }
-    var btn = qs("#chSpeakBtn");
-    if (btn) btn.setAttribute("data-state", "loading");
-    yunFetch(spk.queue[spk.idx]).then(function (url) {
+  // key: a string identifying what's playing ("ch:ch01" / "msg:<id>") so its button(s) can
+  // be found again later. buildQueue(): returns the array of text chunks to speak. title:
+  // shown on the lock-screen "now playing" card via MediaSession.
+  function speakStart(key, queue, title) {
+    spk.token++;
+    var myToken = spk.token;
+    if (!queue || !queue.length) return;
+    spk.queue = queue; spk.idx = 0; spk.active = true; spk.paused = false; spk.loading = true; spk.curKey = key; spk.mode = "azure"; spk.title = title || "";
+    updateSpeakButtons();
+    ttsBuildFullAudio(myToken, queue).then(function (blob) {
       if (myToken !== spk.token) return;
+      spk.loading = false;
+      if (!blob || !blob.size) { spkStopAll(); return; }
+      var url = URL.createObjectURL(blob);
       var a = spkGetAudio();
       a.src = url;
-      a.onended = function () { if (myToken === spk.token && !spk.paused) { spk.idx++; spkPlayAzureQueue(myToken); } };
+      a.onended = function () { if (myToken === spk.token) spkStopAll(); };
       a.onerror = function () { if (myToken === spk.token) { spk.mode = "native"; spkPlayNativeQueue(myToken); } };
+      setupMediaSession(spk.title);
       var p = a.play();
       if (p && p.catch) p.catch(function () { if (myToken === spk.token) { spk.mode = "native"; spkPlayNativeQueue(myToken); } });
-      updateSpeakButton();
+      updateSpeakButtons();
     }).catch(function () {
       if (myToken !== spk.token) return;
+      spk.loading = false;
       spk.mode = "native";
       spkPlayNativeQueue(myToken);
     });
   }
-  function speakChapter(chId) {
-    var d = D();
-    var ch = d.chapters[chId];
-    if (!ch) return;
-    spk.token++;
-    var myToken = spk.token;
-    spk.queue = chapterSpeakChunks(ch);
-    if (!spk.queue.length) return;
-    spk.idx = 0; spk.active = true; spk.paused = false; spk.curChId = chId; spk.mode = "azure";
-    updateSpeakButton();
-    spkPlayAzureQueue(myToken);
-  }
-  function speakToggleForChapter(chId) {
-    if (spk.active && spk.curChId === chId) {
+  function speakToggle(key, buildQueue, title) {
+    if (spk.active && spk.curKey === key) {
       spk.paused = !spk.paused;
       if (spk.paused) {
         if (spk.mode === "native") { try { window.speechSynthesis.pause(); } catch (e) {} }
@@ -443,13 +559,29 @@
         if (spk.mode === "native") { try { window.speechSynthesis.resume(); } catch (e) {} spkPlayNativeQueue(spk.token); }
         else { try { spkGetAudio().play(); } catch (e) {} }
       }
-      updateSpeakButton();
+      updateSpeakButtons();
     } else {
       spkStopAll();
-      speakChapter(chId);
+      speakStart(key, buildQueue(), title);
     }
   }
+  function speakToggleForChapter(chId) {
+    var d = D();
+    var ch = d.chapters[chId];
+    if (!ch) return;
+    speakToggle("ch:" + chId, function () { return chapterSpeakChunks(D().chapters[chId]); }, ch.numFull + "　" + ch.title);
+  }
   window.speakToggleForChapter = speakToggleForChapter;
+  // Reads one companion reply aloud — reuses mdToHtml()+stripHtml() to turn the markdown
+  // back into clean spoken text (headers/bold/table syntax stripped, not read as symbols),
+  // then the same pronunciation-fix + chunking pipeline as chapter reading.
+  function speakToggleForMsg(mi) {
+    var m = chatSession.messages[mi];
+    if (!m || m.role !== "ai" || m.pending) return;
+    if (!m.id) m.id = newMsgId();
+    var plain = stripHtml(mdToHtml(m.text));
+    speakToggle("msg:" + m.id, function () { return spkChunks(ttsPronounceFix(plain)); }, t().companionTitle);
+  }
   function uiToast(msg) {
     try {
       var el = document.createElement("div");
@@ -612,6 +744,8 @@
 
   window.L321 = {
     state: state, saveUser: saveUser, UI: UI, mdToHtml: mdToHtml, ttsPronounceFix: ttsPronounceFix, chapterSpeakChunks: chapterSpeakChunks,
+    spk: spk, speakToggleForChapter: speakToggleForChapter, speakToggleForMsg: speakToggleForMsg,
+    yunFetchBuffer: yunFetchBuffer, ttsBuildFullAudio: ttsBuildFullAudio, TTS_AUDIO_CACHE: TTS_AUDIO_CACHE,
     // getter (not a direct reference) because `chatSession`/`renderCompanion` are assigned further
     // down this same IIFE, after this object literal already runs — a plain reference here would
     // capture `undefined` for anything not yet hoisted-with-value at this point in the file.
@@ -635,7 +769,11 @@
   function render() {
     var parts = parseHash();
     var root = parts[0];
-    if (spk.active && !(root === "course" && parts[1] === spk.curChId)) spkStopAll();
+    if (spk.active) {
+      var stillOnSameChapter = root === "course" && parts[1] && ("ch:" + parts[1]) === spk.curKey;
+      var stillOnCompanion = root === "companion" && spk.curKey && spk.curKey.indexOf("msg:") === 0;
+      if (!stillOnSameChapter && !stillOnCompanion) spkStopAll();
+    }
     var view = qs("#view");
     view.innerHTML = "";
     updateTabbar(root);
@@ -803,7 +941,7 @@
     html += '<a class="chtb-btn" href="#/today" aria-label="' + esc(t().backHome) + '">🏠</a>';
     html += '<a class="chtb-btn" href="#/course" aria-label="' + esc(t().backToc) + '">☰</a>';
     html += '<span class="chtb-spacer"></span>';
-    html += '<button class="chtb-btn" id="chSpeakBtn" data-state="idle" aria-label="' + esc(t().readAloud) + '">🔊</button>';
+    html += '<button class="chtb-btn" id="chSpeakBtn" data-speak-key="ch:' + esc(chId) + '" data-state="idle" aria-label="' + esc(t().readAloud) + '">🔊</button>';
     html += '<button class="chtb-btn" id="chFontBtn" onclick="cycleFont()" aria-label="' + esc(t().fontSizeLabel) + '">A⁺</button>';
     html += '</div>';
     html += '<div class="chhead">';
@@ -850,7 +988,7 @@
     var speakBtn = qs("#chSpeakBtn", view);
     if (speakBtn) {
       speakBtn.addEventListener("click", function () { speakToggleForChapter(chId); });
-      if (spk.curChId === chId) updateSpeakButton();
+      updateSpeakButtons();
     }
 
     // wire deeper open tracking
@@ -1270,6 +1408,7 @@
       html += '<div class="msg ai" data-mi="' + mi + '">';
       html += '<div class="msg-body' + (m.collapsed !== false ? " clamped" : "") + '">' + mdToHtml(m.text) + '</div>';
       html += '<div class="msg-actions">';
+      html += '<button type="button" class="msg-act msg-speak" data-mi="' + mi + '" data-speak-key="msg:' + esc(m.id || "") + '" data-state="idle" aria-label="' + esc(t().readAloud) + '">🔊</button>';
       html += '<button type="button" class="msg-act msg-collapse" data-mi="' + mi + '" hidden></button>';
       html += '<button type="button" class="msg-act msg-fav' + (isFav ? " on" : "") + '" data-mi="' + mi + '">' + (isFav ? "★ " + esc(t().msgSaved) : "☆ " + esc(t().msgSave)) + '</button>';
       html += '<button type="button" class="msg-act msg-del" data-mi="' + mi + '">🗑 ' + esc(t().msgDelete) + '</button>';
@@ -1328,9 +1467,14 @@
       }
     });
     log.addEventListener("click", function (e) {
+      var speakBtn2 = e.target.closest(".msg-speak");
       var collapseBtn = e.target.closest(".msg-collapse");
       var favBtn = e.target.closest(".msg-fav");
       var delBtn = e.target.closest(".msg-del");
+      if (speakBtn2) {
+        speakToggleForMsg(parseInt(speakBtn2.getAttribute("data-mi"), 10));
+        return;
+      }
       if (collapseBtn) {
         var m1 = chatSession.messages[parseInt(collapseBtn.getAttribute("data-mi"), 10)];
         if (m1) { m1.collapsed = !m1.collapsed; renderCompanion(view, chId); }
@@ -1343,11 +1487,15 @@
       }
       if (delBtn) {
         if (!window.confirm(t().msgDeleteConfirm)) return;
-        chatSession.messages.splice(parseInt(delBtn.getAttribute("data-mi"), 10), 1);
+        var delMi = parseInt(delBtn.getAttribute("data-mi"), 10);
+        var delMsg = chatSession.messages[delMi];
+        if (delMsg && spk.active && spk.curKey === "msg:" + delMsg.id) spkStopAll();
+        chatSession.messages.splice(delMi, 1);
         renderCompanion(view, chId);
         return;
       }
     });
+    updateSpeakButtons();
 
     var chatInEl = qs("#chatIn", view);
     if (pendingAsk) {
@@ -1544,6 +1692,10 @@
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">';
     html += '<span>' + (state.lang === "en" ? "Theme" : "外觀") + '</span>';
     html += '<div class="langswitch" id="themeswitch"><button data-theme="light">' + esc(t().themeLight) + '</button><button data-theme="dark">' + esc(t().themeDark) + '</button><button data-theme="auto">' + esc(t().themeAuto) + '</button></div>';
+    html += '</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);">';
+    html += '<span>' + esc(t().meFontSize) + '</span>';
+    html += '<div class="langswitch" id="fontswitch"><button data-font="0">' + esc(t().fontStandard) + '</button><button data-font="1">' + esc(t().fontLarge) + '</button><button data-font="2">' + esc(t().fontXLarge) + '</button></div>';
     html += '</div></div>';
 
     view.innerHTML = html;
@@ -1553,6 +1705,13 @@
         state.user.theme = b.getAttribute("data-theme");
         saveUser();
         applyTheme();
+        renderMe(view);
+      });
+    });
+    qsa("#fontswitch button", view).forEach(function (b) {
+      b.classList.toggle("active", parseInt(b.getAttribute("data-font"), 10) === state.font);
+      b.addEventListener("click", function () {
+        setFont(parseInt(b.getAttribute("data-font"), 10));
         renderMe(view);
       });
     });
