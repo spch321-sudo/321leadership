@@ -471,7 +471,10 @@
     var reZhang = new RegExp("(" + alt + ")\\s*([0-9]{1,3})\\s*章\\s*([0-9]{1,3})(?:\\s*[至到\\-–~]\\s*([0-9]{1,3}))?\\s*" + jie + "?", "g");
     function expand(m, book, chap, v1, v2) {
       var full = canon[book] || book;
-      var s = full + numToZh(chap) + "章" + numToZh(v1);
+      // 詩篇／诗篇的「篇」不是「章」——中文習慣說「詩篇六十二篇八節」，不是「詩篇六十二章八節」，
+      // 這是聖經書卷裡唯一的例外（其餘65卷都用「章」），所以這裡單獨判斷書卷全名來換單位詞。
+      var unit = (full === "詩篇" || full === "诗篇") ? "篇" : "章";
+      var s = full + numToZh(chap) + unit + numToZh(v1);
       if (v2) s += "到" + numToZh(v2);
       return s + jie;
     }
@@ -676,13 +679,17 @@
   // this makes the second caller just await the first call's own promise instead of firing
   // a duplicate network request.
   var TTS_INFLIGHT = {};
-  // v1.3.14：使用者反映「開啟App後切換到簡體版」朗讀常常直接變成裝置內建的機械音，
-  // 抓不到真人語音（雲帆）。這種「第一次請求就失敗、之後多半正常」的症狀，最常見的原因
-  // 是Worker剛被喚醒的冷啟動延遲，或行動網路上第一次連線建立比較慢——單次請求超時或
-  // 失敗不代表Worker真的壞了。原本一失敗就整段朗讀永久改用裝置語音，現在改成失敗時
-  // 先等一下自動重試一次（真人語音失敗的機會因此大幅降低），兩次都失敗才真的判定為
-  // 連不上、改用裝置內建語音。
-  var TTS_RETRY_DELAY_MS = 700;
+  // v1.3.14／v1.3.15：使用者反映「開啟App後切換到簡體版」朗讀常常直接變成裝置內建的機械音，
+  // 抓不到真人語音（雲帆）；但接著切到繁體版很快就能聽到真人語音（雲哲），這時候再切回簡體版
+  // 也能聽到雲帆了。這個「一整個App session裡永遠只有第一次朗讀請求會失敗、之後不管切到哪個
+  // 語言都正常」的模式，很清楚指向問題出在Worker本身「被叫醒」的冷啟動延遲——第一次呼叫要
+  // 花比較久時間把底層跟Azure的連線／授權建立起來，跟使用者選的是哪個語言／哪個聲音無關。
+  // v1.3.14先加了「失敗後等一下重試一次」，但實測這樣還不夠（重試的等待時間或次數不足以
+  // 撐過真正的冷啟動）。v1.3.15雙管齊下：(1)重試次數加到2次、等待時間也拉長且遞增
+  // （800ms、1600ms），給冷啟動更多機會恢復；(2)App一開啟就在背景先送一個小小的「暖身」
+  // 請求到語音伺服器（不等結果、不影響任何畫面或播放），提早把冷啟動的延遲吃掉，讓使用者
+  // 真正點下🔊朗讀的時候，Worker多半已經醒了。
+  var TTS_RETRY_DELAYS_MS = [800, 1600];
   function yunFetchOnce(voice, rate, piece) {
     return fetch(TTS_ENDPOINT, {
       method: "POST",
@@ -694,11 +701,29 @@
     });
   }
   function yunFetchWithRetry(voice, rate, piece) {
-    return yunFetchOnce(voice, rate, piece).catch(function (err) {
-      return new Promise(function (resolve) { setTimeout(resolve, TTS_RETRY_DELAY_MS); })
-        .then(function () { return yunFetchOnce(voice, rate, piece); })
-        .catch(function () { throw err; }); // report the original failure if the retry also fails
-    });
+    function attempt(delaysLeft, lastErr) {
+      if (!delaysLeft.length) return yunFetchOnce(voice, rate, piece); // final try — let its own rejection propagate
+      return yunFetchOnce(voice, rate, piece).catch(function (err) {
+        return new Promise(function (resolve) { setTimeout(resolve, delaysLeft[0]); })
+          .then(function () { return attempt(delaysLeft.slice(1), err); });
+      });
+    }
+    return attempt(TTS_RETRY_DELAYS_MS.slice(), null);
+  }
+  // Fire-and-forget "warm up" ping — sent once as soon as the app boots, well before the user
+  // ever taps 🔊, so a slow first connection to the Worker (see comment above) has already
+  // happened in the background by the time a real reading is requested. Uses a throwaway
+  // one-character piece of text with the current language's default voice; result (success or
+  // failure) is silently ignored either way — this must never surface an error or delay boot.
+  function ttsWarmUp() {
+    try {
+      var opts = TTS_VOICE_OPTIONS[state.lang] || TTS_VOICE_OPTIONS.zh;
+      var defId = TTS_VOICE_DEFAULT[state.lang] || (opts[0] && opts[0].id);
+      var found = null;
+      for (var i = 0; i < opts.length; i++) { if (opts[i].id === defId) { found = opts[i]; break; } }
+      var voice = (found || opts[0]).voice;
+      yunFetchOnce(voice, "+0%", "。").catch(function () {});
+    } catch (e) {}
   }
   function yunFetchBuffer(piece) {
     var voice = ttsVoiceName(), rate = "+0%";
@@ -1053,6 +1078,7 @@
     spk: spk, speakToggleForChapter: speakToggleForChapter, speakToggleForMsg: speakToggleForMsg,
     yunFetchBuffer: yunFetchBuffer, TTS_AUDIO_CACHE: TTS_AUDIO_CACHE, ttsVoiceName: ttsVoiceName,
     TTS_VOICE_OPTIONS: TTS_VOICE_OPTIONS, setTtsVoice: setTtsVoice,
+    yunFetchWithRetry: yunFetchWithRetry, ttsWarmUp: ttsWarmUp, TTS_RETRY_DELAYS_MS: TTS_RETRY_DELAYS_MS,
     // getter (not a direct reference) because `chatSession`/`renderCompanion` are assigned further
     // down this same IIFE, after this object literal already runs — a plain reference here would
     // capture `undefined` for anything not yet hoisted-with-value at this point in the file.
@@ -2247,6 +2273,7 @@
   function init() {
     applyTheme();
     applyFont();
+    ttsWarmUp(); // fire-and-forget — see comment at its definition
     on(qs("#langswitch"), "click", "button", function (e, btn) {
       switchLang(btn.getAttribute("data-lang"));
     });

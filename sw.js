@@ -1,7 +1,7 @@
 // 321領導力 — Service Worker
 // Versioned cache: bump VERSION whenever app shell or data content changes,
 // otherwise already-installed PWA users will keep seeing stale content.
-var VERSION = "v1.3.14";
+var VERSION = "v1.3.15";
 var SHELL_CACHE = "l321-shell-" + VERSION;
 var DATA_CACHE = "l321-data-" + VERSION;
 
