@@ -1387,6 +1387,17 @@
     }
     function hlNoteKey(sec, pidx, idx) { return sec + ":" + pidx + ":" + idx; }
     function findSentSpan(p, idx) { return p.querySelector('.sent[data-idx="' + idx + '"]'); }
+    // 一條畫線可以涵蓋同一段裡連續的好幾句（h.sp＝句數，預設 1）；這裡找出「涵蓋這一句」的那條畫線
+    function coverHl(sec, pidx, idx) {
+      return (state.user.highlights[chId] || []).find(function (h) { return h.sec === sec && h.pidx === pidx && idx >= h.idx && idx < h.idx + (h.sp || 1); });
+    }
+    function repaintPara(p, sec, pidx) {
+      Array.prototype.forEach.call(p.querySelectorAll(".sent"), function (s2) {
+        var i2 = parseInt(s2.getAttribute("data-idx"), 10), c = coverHl(sec, pidx, i2);
+        if (c) { s2.setAttribute("data-hl", "1"); s2.setAttribute("data-color", c.color || "gold"); }
+        else { s2.removeAttribute("data-hl"); s2.removeAttribute("data-color"); }
+      });
+    }
     function renderHlNote(p, sec, pidx, idx) {
       // several sentences within the SAME paragraph can each carry their own note, so notes
       // are identified individually (data-note-key) and kept stacked in sentence order right
@@ -1433,8 +1444,11 @@
       var h = findHighlight(sec, pidx, idx);
       if (!h || !span) return;
       closeHlSheet();
-      var sentence = span.textContent.slice(0, 200);
       var p = span.parentNode;
+      function spanText(hh) { var o = ""; for (var d = 0; d < ((hh && hh.sp) || 1); d++) { var s3 = findSentSpan(p, idx + d); if (s3) o += s3.textContent; } return o.replace(/\s+/g, " ").trim(); }
+      var sentence = spanText(h);
+      var cardRef = ch.numFull + " " + ch.title;
+      function shareTextOf() { var hh = findHighlight(sec, pidx, idx), n2 = (ta.value || "").trim(); return "「" + sentence + "」\n—— " + cardRef + (n2 ? "\n\n" + n2 : "") + "\n\n" + t().brand; }
       var curColor = h.color || "gold";
       var colorNames = HL_COLOR_NAMES[state.lang] || HL_COLOR_NAMES.zh;
       var colorsHtml = '<div class="hlsheet-colorrow">' +
@@ -1448,12 +1462,20 @@
         '<div class="hlsheet-title">' + esc(t().hlSheetTitle) + '</div>' +
         '<div class="hlsheet-quote">' + esc(sentence) + '</div>' +
         colorsHtml +
+        '<div class="hlsheet-spanrow"><span class="hlsheet-colorlabel">' + esc(tx("hlSpan")) + '</span>' +
+        '<button type="button" class="btn" data-act="spm">－</button><span class="hlsheet-num">' + esc(tx("spanUnit", h.sp || 1)) + '</span><button type="button" class="btn" data-act="spp">＋</button>' +
+        '<button type="button" class="btn" data-act="spall">' + esc(tx("spanP")) + '</button></div>' +
         '<textarea class="hlsheet-ta" placeholder="' + esc(t().hlReflectionPlaceholder) + '">' + esc(h.note || "") + '</textarea>' +
         '<div class="hlsheet-acts">' +
         '<button type="button" data-act="save" class="btn gold">' + esc(t().hlSaveReflection) + '</button>' +
         '<button type="button" data-act="ask" class="btn primary">✨ ' + esc(t().hlAskXz) + '</button>' +
         '</div>' +
         '<div class="hlsheet-acts2">' +
+        '<button type="button" data-act="mkcard" class="btn gold">🖼 ' + esc(tx("makeCard")) + '</button>' +
+        '<button type="button" data-act="read" class="btn">🔊 ' + esc(tx("readThis")) + '</button>' +
+        '<button type="button" data-act="copy" class="btn">⧉ ' + esc(tx("copy")) + '</button>' +
+        '<button type="button" data-act="share" class="btn">↗ ' + esc(tx("share")) + '</button>' +
+        '</div><div class="hlsheet-acts2">' +
         '<button type="button" data-act="clearnote" class="btn">' + esc(t().hlClearNote) + '</button>' +
         '<button type="button" data-act="remove" class="btn danger">' + esc(t().hlRemoveHighlight) + '</button>' +
         '<button type="button" data-act="cancel" class="btn">' + esc(t().hlCancel) + '</button>' +
@@ -1470,7 +1492,7 @@
           var color = btn.getAttribute("data-color");
           var hh = findHighlight(sec, pidx, idx);
           if (hh) { hh.color = color; saveUser(); }
-          span.setAttribute("data-color", color);
+          repaintPara(p, sec, pidx);
           var key = hlNoteKey(sec, pidx, idx);
           var noteEl = p.parentNode.querySelector('.hl-note[data-note-key="' + key + '"]');
           if (noteEl) noteEl.setAttribute("data-color", color);
@@ -1489,7 +1511,7 @@
         var note = (ta.value || "").trim();
         var hh = findHighlight(sec, pidx, idx);
         if (hh) { hh.note = note; saveUser(); } // keep whatever reflection was just typed, same as Save would
-        pendingAsk = buildAskXzQuestion(sentence, note);
+        pendingAsk = buildAskXzQuestion(spanText(findHighlight(sec, pidx, idx)), note);
         pendingAskAutoSend = true;
         closeHlSheet();
         navigate("#/companion/" + chId);
@@ -1505,12 +1527,40 @@
         var i = arr.findIndex(function (hh) { return hh.sec === sec && hh.pidx === pidx && hh.idx === idx; });
         if (i >= 0) arr.splice(i, 1);
         saveUser();
-        span.removeAttribute("data-hl");
+        repaintPara(p, sec, pidx);
         var key = hlNoteKey(sec, pidx, idx);
         var noteEl = p.parentNode.querySelector('.hl-note[data-note-key="' + key + '"]');
         if (noteEl) noteEl.remove();
         closeHlSheet();
       });
+      function setSpan(n) {
+        var hh = findHighlight(sec, pidx, idx); if (!hh) return;
+        var total = p.querySelectorAll(".sent").length, max = total - idx;
+        hh.sp = Math.max(1, Math.min(n, max)); if (hh.sp === 1) delete hh.sp;
+        sentence = spanText(hh); hh.text = sentence.slice(0, 400);
+        saveUser(); repaintPara(p, sec, pidx);
+        var q = mask.querySelector(".hlsheet-quote"); if (q) q.textContent = sentence;
+        var nu = mask.querySelector(".hlsheet-num"); if (nu) nu.textContent = tx("spanUnit", hh.sp || 1);
+        return max;
+      }
+      mask.querySelector('[data-act="spm"]').addEventListener("click", function () { var hh = findHighlight(sec, pidx, idx); setSpan(((hh && hh.sp) || 1) - 1); });
+      mask.querySelector('[data-act="spp"]').addEventListener("click", function () { var hh = findHighlight(sec, pidx, idx); setSpan(((hh && hh.sp) || 1) + 1); });
+      mask.querySelector('[data-act="spall"]').addEventListener("click", function () {
+        var hh = findHighlight(sec, pidx, idx), max = p.querySelectorAll(".sent").length - idx;
+        var already = hh && (hh.sp || 1) === max; setSpan(max);
+        uiToast(already ? tx("spanIsP") : tx("spanDoneP", max));
+      });
+      mask.querySelector('[data-act="mkcard"]').addEventListener("click", function () {
+        var hh = findHighlight(sec, pidx, idx); if (hh) { hh.note = (ta.value || "").trim(); saveUser(); }
+        var txt = sentence, nt = (ta.value || "").trim();
+        if (window.GXU && GXU.open) { closeHlSheet(); GXU.open({ text: txt, ref: cardRef, note: nt, plain: true }); } else uiToast(tx("noGxu"));
+      });
+      mask.querySelector('[data-act="read"]').addEventListener("click", function () {
+        var txt = sentence; closeHlSheet();
+        speakToggle("hl:" + chId + ":" + sec + ":" + pidx + ":" + idx, function () { return spkChunks(ttsPronounceFix(txt)); }, cardRef);
+      });
+      mask.querySelector('[data-act="copy"]').addEventListener("click", function () { xzCopy(shareTextOf(), function () { uiToast(tx("copied")); }); });
+      mask.querySelector('[data-act="share"]').addEventListener("click", function () { xzShare(shareTextOf()); });
       mask.querySelector('[data-act="cancel"]').addEventListener("click", closeHlSheet);
     }
     // split every highlightable paragraph into sentence spans (pidx = paragraph position
@@ -1530,7 +1580,7 @@
         span.setAttribute("data-sec", sec);
         span.setAttribute("data-pidx", pidx);
         span.setAttribute("data-idx", idx);
-        var existingHl = findHighlight(sec, pidx, idx);
+        var existingHl = coverHl(sec, pidx, idx);
         if (existingHl) {
           span.setAttribute("data-hl", "1");
           span.setAttribute("data-color", existingHl.color || "gold");
@@ -1540,9 +1590,9 @@
         span.addEventListener("click", function (e) {
           if (e.target.closest("a")) return;
           var arr = state.user.highlights[chId] = state.user.highlights[chId] || [];
-          var existingIdx = arr.findIndex(function (h) { return h.sec === sec && h.pidx === pidx && h.idx === idx; });
-          if (existingIdx >= 0) {
-            openHlSheet(span, sec, pidx, idx);
+          var cov = coverHl(sec, pidx, idx);
+          if (cov) {
+            openHlSheet(findSentSpan(p, cov.idx) || span, sec, pidx, cov.idx);
           } else {
             arr.push({ sec: sec, pidx: pidx, idx: idx, text: span.textContent.slice(0, 200), at: Date.now(), lang: state.lang, chId: chId, chTitle: ch.title, color: "gold" });
             span.setAttribute("data-hl", "1");
@@ -1858,6 +1908,77 @@
   var msgIdSeq = 0;
   function newMsgId() { msgIdSeq++; return "m" + Date.now().toString(36) + msgIdSeq; }
 
+
+  /* ===== 小智回答選項（回答對象十種／長度／慕道友信仰背景／追問／截斷接續）與畫線面板補強：移植自 321互動聖經 ===== */
+  var XP = {"zh":{"audT":"小智的回答對象","auds":"🧑 成人|🧒 青少年|🧸 兒童|🌱 慕道友|👴 長輩|👩‍👧 單親|🙋 單身|👨‍👩‍👧 父母|💑 夫妻|⛪ 牧者","audNow":"回答對象：{0}　▾","audSet":"小智會用「{0}」聽得懂的方式回答","audD_adult":"有深度，貼近工作、家庭與關係","audD_teen":"幽默風趣、不說教，用你的世界來比喻","audD_kid":"非常簡單好懂，像在聽故事","audD_seeker":"還沒信主也聽得懂，不說教，給實際的幫助","aud_adult":"【回答對象】成年讀者：口吻成熟、溫暖、真誠。","aud_teen":"【回答對象】青少年：像朋友聊天，幽默風趣，可以有一點梗，但不說教、不輕浮，也絕不拿神和聖經開玩笑。","aud_kid":"【回答對象】兒童（5–11 歲）：非常淺顯，短句，像說故事，一句只講一件事，不用艱深名詞。","aud_seeker":"【回答對象】慕道友（還沒信主的朋友）：從他的處境與疑問切入，再帶到經文；用最平常的話，不用「無己、作王、得勝、屬靈」等教會內部用語，必須用的詞立刻用生活說法解釋；誠實、尊重、不說教、不施壓、不要求現在就相信；清楚說出神是怎樣的神、耶穌為我們做了什麼；給一兩個這星期就能試的小步驟；禱告只當作「若你願意，可以這樣對神說」的邀請。","prayRule":"\n【禱告的寫法（一定要照做）】回答裡凡要寫禱告，那一段的小標題一律寫「憑信心禱告」，不要寫「為你禱告」「我為你禱告」或「一起禱告」。禱告前先用一句話邀請讀者自己開口，例如「請你憑信心，親口向主這樣禱告：」。禱告本身要用讀者的第一人稱，寫成讀者自己向神說的話；不要寫成小智替讀者禱告，不要出現「這位」「他／她」等第三人稱。禱告要簡短、真誠、帶著信心交託與感恩，結尾一律用「奉主耶穌的名禱告，阿們。」","fu_adult":"💑 用在婚姻~請把你剛才的回答，用在夫妻關係裡，給我一個具體做法。|🏠 用在家庭~請把你剛才的回答，用在和家人的相處上。|💼 用在職場~請把你剛才的回答，用在職場與同事相處上。|💗 我的內心~如果我心裡還在掙扎，你剛才的回答可以怎樣幫助我？|🙏 帶我禱告~請依你剛才的回答，帶我憑信心禱告。","fu_teen":"🏫 在學校~把你剛才說的，用在學校和同學身上會怎樣？|👫 跟朋友~跟朋友相處時，我可以怎麼做？|📱 手機網路~這和我用手機、上網有什麼關係？|💪 今天挑戰~給我一個今天就能做的小挑戰。|🙏 一起禱告~請用簡單的話帶我禱告。","fu_kid":"🏠 在家裡~在家裡我可以怎麼做？|🏫 在學校~在學校我可以怎麼做？|📖 說個故事~可以用一個小故事告訴我嗎？|🙏 小禱告~教我一句小小的禱告。","fu_seeker":"🤔 我還有疑問~我還是有些疑問，可以再用平常的話解釋嗎？|🚶 下一步~如果我想多了解，這個星期可以先做什麼？|💭 人生意義~這和我人生的意義有什麼關係？|🙏 試著禱告~如果我想試著和神說話，可以怎麼說？","bgs":"🌱 沒有信仰|☸️ 佛教|🏮 民間信仰|🕯️ 一貫道|☪️ 穆斯林|🔬 無神論","bgNames":"沒有信仰|佛教|民間信仰|一貫道|穆斯林|無神論者","bgT":"信仰背景：","lenT":"長度：","lens":"簡要|適中|詳細","lenSet":"小智接著用「{0}」重新回答","lenSet2":"已改為「{0}」，下次提問就會照這個長度回答","bgSet":"小智接著以「{0}」的角度重新回答","bgSet2":"已改為「{0}」，下次提問就會照這個角度回答","lenSys_brief":"\n【回答長度：簡要】只用3～5句話，約150字：先給核心答案，加上一句經文或一個比喻，最後一句禱告或一個小步驟；不用表格，不列長清單。","lenSys_full":"\n【回答長度：詳細】約800～1200字：說明經文脈絡、關鍵字詞、相關經文對照，連結321應用與本週操練，最後寫禱告；可使用短小的標題。","skbg_none":"\n【信仰背景：沒有信仰】不預設任何宗教詞彙，從對方的生活處境（壓力、關係、意義、不安）切入；一次只講一個重點，用日常說法，避免「無己、作王、得勝」等內部用語。\n共通原則：保持尊重與愛心，不嘲笑、不施壓、不要求對方立刻決定；誠實而溫和地說明基督信仰；先回答對方真正的問題，再連結到目前這個主題。","skbg_buddhism":"\n【信仰背景：佛教】不貶低佛陀與修行，不使用「拜偶像、迷信」等字眼；先肯定佛教對苦、無常、慈悲的重視，再說明聖經所說有位格的創造主、白白的恩典（不靠功德）、一世生命而非輪迴；不亂用佛教名詞。\n共通原則：保持尊重與愛心，不嘲笑、不施壓、不要求對方立刻決定；誠實而溫和地說明基督信仰；先回答對方真正的問題，再連結到目前這個主題。","skbg_folk":"\n【信仰背景：民間信仰】尊重孝心與祭祖的心意，先肯定聖經本來就教導孝敬父母；再說明敬拜歸給獨一真神；關心拜拜背後對平安與保佑的需要，並溫和說明祭祖與追思的不同；不要求對方立刻改變家人的習慣。\n共通原則：保持尊重與愛心，不嘲笑、不施壓、不要求對方立刻決定；誠實而溫和地說明基督信仰；先回答對方真正的問題，再連結到目前這個主題。","skbg_yiguandao":"\n【信仰背景：一貫道】尊重吃素與重視倫理的生活，不批評師尊、道場與儀式，也不自己推斷教義細節；從對「天」的敬畏談起，再溫和說明約翰福音14:6，耶穌是通往天父的道路。\n共通原則：保持尊重與愛心，不嘲笑、不施壓、不要求對方立刻決定；誠實而溫和地說明基督信仰；先回答對方真正的問題，再連結到目前這個主題。","skbg_muslim":"\n【信仰背景：穆斯林】以最大的敬意對談，不辱罵、不嘲諷、不施壓勸對方改教（考慮其家庭與社群的代價）；從獨一的神，以及亞伯拉罕、摩西、大衛談起；只引用聖經；清楚說明基督徒信的不是三個神；可比較「靠行為得救」與「靠恩典得救」；避免使用與豬肉、酒有關的比喻。\n共通原則：保持尊重與愛心，不嘲笑、不施壓、不要求對方立刻決定；誠實而溫和地說明基督信仰；先回答對方真正的問題，再連結到目前這個主題。","skbg_atheist":"\n【信仰背景：無神論者】尊重理性與證據，不說「只要信就好」，不把對方的想法稻草人化；誠實承認對苦難與宗教歷史錯誤的質疑很有分量，也承認哪些事無法用科學證明；從道德直覺、人生意義、宇宙秩序與耶穌的歷史記載談起；語氣平等、好奇、不防衛。\n共通原則：保持尊重與愛心，不嘲笑、不施壓、不要求對方立刻決定；誠實而溫和地說明基督信仰；先回答對方真正的問題，再連結到目前這個主題。","audNowS":"回答對象：{0} ▾","audD_elder":"尊敬溫和、慢慢說，句子清楚好懂","audD_single_parent":"先接住你的辛苦，給做得到的小步驟與盼望","audD_single":"真誠平等，不催婚，談身分、等待與使命","audD_parent":"貼近養兒育女的日常：溝通、管教、陪伴與禱告","audD_couple":"夫妻同行：溝通、饒恕、同心與一起禱告","audD_pastor":"同工口吻：牧養、講道預備、團隊與不倦怠","aud_elder":"【回答對象】回答對象：長輩（約65歲以上）。請用尊敬、溫和、慢慢說的口吻，像晚輩敬重地陪長輩讀經；句子清楚、不拐彎，不用網路用語和英文縮寫；比喻取自一生的閱歷（田地、家人、歲月、病痛、孫子、老街坊）。重點先講，分成短段落，不要太長。肯定他們一生走過的路與在主裡的忠心，不說教、不指責、不用「你應該」。可以談健康與軟弱、孤單、放下與交託、把信仰傳給下一代、永恆的盼望與感恩。結尾給一件簡單、容易做到的小事（一句禱告、打電話問候家人、數算一件感謝）。若提到身體不適、孤單或失去親人，要先溫柔安慰，並鼓勵他和家人、教會關懷同工聯絡。","fu_elder":"🩺 健康~請針對你剛才的回答，用簡單清楚、慢慢說的話說明怎麼把它用在身體的軟弱與健康，並給我一個這個星期做得到的具體小步驟。|🤍 孤單~請針對你剛才的回答，用簡單清楚、慢慢說的話說明怎麼把它用在孤單與思念，並給我一個這個星期做得到的具體小步驟。|👨‍👩‍👧‍👦 兒孫~請針對你剛才的回答，用簡單清楚、慢慢說的話說明怎麼把它用在和兒孫、家人的關係，並給我一個這個星期做得到的具體小步驟。|🕊️ 交託~請針對你剛才的回答，用簡單清楚、慢慢說的話說明怎麼把它用在放下心中的牽掛、交託給主，並給我一個這個星期做得到的具體小步驟。|🌅 盼望~請針對你剛才的回答，用簡單清楚、慢慢說的話說明怎麼把它用在永恆的盼望與感恩，並給我一個這個星期做得到的具體小步驟。|🙏 禱告~請把你剛才說的重點，用簡單的話寫成一段短短的禱告，讓我可以慢慢念給主聽。","aud_single_parent":"【回答對象】回答對象：單親爸爸或媽媽（一個人撐起一個家）。請先接住他的辛苦：他常常很累、有愧疚、有孤單，也有經濟、時間與教養的壓力。口吻溫暖、接納、不評斷，不追問過去的原因，不說「你應該再找個伴」，也不把單親說成缺憾。引用神的心意：神是孤兒的父、寡婦的伸冤者（詩篇68:5），祂與我們同在。再給盼望與實際：每一個小步驟都要在忙碌中做得到（五分鐘禱告、跟孩子的一個小儀式、開口向弟兄姊妹求助）。內容簡短、段落要短。結尾給一個這個星期做得到的小步驟。若他提到被暴力對待、疲憊到撐不下去或想傷害自己，要溫柔回應，並鼓勵他立刻聯絡信任的人、教會同工或專業協助。","fu_single_parent":"😮‍💨 疲累~請針對你剛才的回答，說明怎麼把它用在一個人撐家的疲累與內疚，並給我一個這個星期做得到的具體小步驟。|👧 孩子~請針對你剛才的回答，說明怎麼把它用在陪伴孩子與教養，並給我一個這個星期做得到的具體小步驟。|💰 經濟~請針對你剛才的回答，說明怎麼把它用在經濟與時間的壓力，並給我一個這個星期做得到的具體小步驟。|🤝 求助~請針對你剛才的回答，說明怎麼把它用在向弟兄姊妹或教會開口求助，並給我一個這個星期做得到的具體小步驟。|🌤️ 盼望~請針對你剛才的回答，說明怎麼把它用在在這個階段看見神的同在與盼望，並給我一個這個星期做得到的具體小步驟。|🙏 禱告~請把你剛才說的重點，寫成一段我在忙碌中五分鐘內就能禱告完的短禱告。","aud_single":"【回答對象】回答對象：單身的人（可能未婚、離婚、喪偶，或正在等候；不要預設他想結婚或不想結婚）。請不要把單身說成缺憾、「預備期」或「還沒到的人生」，也不要用催婚的口氣。談在基督裡的身分已經完整、被愛；談孤單時怎麼與神、與朋友、與團契連結；談時間、金錢與恩賜的運用與使命；談等待中的信靠；談感情與婚姻的智慧，以及在情感與身體上的聖潔，態度要尊重、不論斷。口吻真誠、平等、輕鬆。結尾給一個這個星期可以做的小步驟。若他提到孤單到想傷害自己，要溫柔回應並鼓勵他立刻聯絡信任的人或專業協助。","fu_single":"🫶 孤單~請針對你剛才的回答，說明怎麼把它用在孤單時怎麼與神、與朋友連結，並給我一個這個星期做得到的具體小步驟。|💝 身分~請針對你剛才的回答，說明怎麼把它用在我在基督裡的身分與價值，並給我一個這個星期做得到的具體小步驟。|⏳ 等待~請針對你剛才的回答，說明怎麼把它用在等待中的信靠，並給我一個這個星期做得到的具體小步驟。|💞 感情~請針對你剛才的回答，說明怎麼把它用在感情與交友的智慧，並給我一個這個星期做得到的具體小步驟。|🎯 使命~請針對你剛才的回答，說明怎麼把它用在把時間與恩賜用在神的使命上，並給我一個這個星期做得到的具體小步驟。|🙏 禱告~請把你剛才說的重點，寫成一段簡短、真誠的禱告，讓我可以拿來禱告。","aud_parent":"【回答對象】回答對象：正在養育孩子的父母（孩子可能從嬰幼兒到成年）。請站在父母的位置：他們常常疲累、擔心孩子、也常常內疚。口吻溫暖、貼近生活、不評斷；承認每個孩子與每個家庭都不同。談陪伴與榜樣、管教與恩典的平衡、親子溝通（怎麼聽、怎麼說）、為孩子禱告、夫妻同心、面對自己的軟弱與失敗；可用日常場景當比喻（吃飯、功課、手機、睡前）。結尾給一個這個星期可以做的具體小步驟（一句話、一個擁抱、一段睡前禱告）。若提到孩子遭受傷害、家庭暴力或孩子有自傷的念頭，要溫柔回應並鼓勵立刻尋求專業協助與信任的人。","fu_parent":"🗣️ 溝通~請針對你剛才的回答，說明怎麼把它用在跟孩子好好溝通（怎麼聽、怎麼說），並給我一個這個星期做得到的具體小步驟。|⚖️ 管教~請針對你剛才的回答，說明怎麼把它用在管教與恩典的平衡，並給我一個這個星期做得到的具體小步驟。|😔 內疚~請針對你剛才的回答，說明怎麼把它用在對孩子發脾氣或覺得虧欠的內疚，並給我一個這個星期做得到的具體小步驟。|💑 夫妻~請針對你剛才的回答，說明怎麼把它用在夫妻在教養上同心，並給我一個這個星期做得到的具體小步驟。|📖 信仰~請針對你剛才的回答，說明怎麼把它用在帶孩子認識神、一起親近神，並給我一個這個星期做得到的具體小步驟。|🙏 禱告~請把你剛才說的重點，寫成一段我可以為孩子祝福的短禱告。","aud_couple":"【回答對象】回答對象：夫妻（正在經營婚姻的丈夫與妻子，可能是新婚、有孩子的中年夫妻，或相伴多年的伴侶）。請站在夫妻同行的位置：口吻溫暖、真誠、不評斷，不偏袒任何一方；承認每段婚姻都有磨合、疲累與受傷的時候。談愛是決定與付出、彼此饒恕、傾聽與表達（怎麼說、怎麼聽）、尊重與同心、金錢與家務的分工、姻親與孩子的教養、一起禱告與一起讀經、在主裡成為一體；可用日常場景當比喻（飯桌、手牽手、吵完架之後、睡前）。結尾給一個這個星期兩個人就能一起做的具體小步驟（一句感謝的話、一段兩人的禱告、一次不看手機的散步）。不要教導妻子順服或丈夫掌權的單方面要求，要強調彼此相愛、彼此順服。若提到家庭暴力、外遇、對方的威脅或有自傷念頭，要溫柔回應，把安全放在第一位，並鼓勵立刻尋求專業協助與信任的人，不要勸人一味忍耐。","fu_couple":"🗣️ 溝通~請針對你剛才的回答，說明夫妻怎麼把它用在好好說、好好聽，並給我們一個這個星期兩個人做得到的具體小步驟。|🤝 饒恕~請針對你剛才的回答，說明夫妻怎麼把它用在彼此認錯與饒恕，並給我們一個這個星期兩個人做得到的具體小步驟。|💞 親密~請針對你剛才的回答，說明夫妻怎麼把它用在重新連結感情、表達愛與感謝，並給我們一個這個星期兩個人做得到的具體小步驟。|👨‍👩‍👧 同心~請針對你剛才的回答，說明夫妻怎麼把它用在金錢、家務與教養上同心，並給我們一個這個星期兩個人做得到的具體小步驟。|📖 同讀~請針對你剛才的回答，說明夫妻怎麼一起讀經、一起親近神，並給我們一個這個星期兩個人做得到的具體小步驟。|🙏 禱告~請把你剛才說的重點，寫成一段夫妻可以一起禱告的短禱告。","aud_pastor":"【回答對象】回答對象：牧者與傳道同工（教會的牧師、傳道人、小組長與事奉的同工）。請站在同工的位置：他們常常肩負許多人的重擔，自己也會疲累、孤單、被誤解或灰心。口吻尊重、平等、真誠，像同工之間彼此扶持，不說教、不居高臨下。可以有適度的深度：點出經文脈絡、原文語境與關鍵字詞的意思，談牧養羊群與生命建造、預備講道與教導、帶領小組與門徒訓練、團隊同心與衝突、面對批評與孤單、屬靈爭戰、自己的靈命與家庭，以及不倦怠的安息與依靠；也可提供講章或查經的切入點、段落與應用建議，但要提醒最後仍須自己在神面前領受。結尾給一個這個星期可以做的具體小步驟（一段安靜親近神的時間、一通關心的電話、一次向同工的坦誠分享）。若提到極度疲憊、憂鬱、想放棄或有自傷念頭，要溫柔回應，並鼓勵立刻尋求信任的同工、屬靈長輩與專業協助。","fu_pastor":"📖 講道~請針對你剛才的回答，提供一個可用於講道或查經的架構（三個要點與一個應用），並提醒我自己先在神面前領受。|🐑 牧養~請針對你剛才的回答，說明怎麼把它用在牧養羊群與關心個別的人，並給我一個這個星期做得到的具體小步驟。|🤝 團隊~請針對你剛才的回答，說明怎麼把它用在帶領團隊、同工同心與處理衝突，並給我一個這個星期做得到的具體小步驟。|🕊️ 安息~請針對你剛才的回答，說明怎麼把它用在自己的疲累與靈命保守，並給我一個這個星期做得到的具體小步驟。|⚔️ 爭戰~請針對你剛才的回答，說明怎麼把它用在面對批評、孤單與屬靈爭戰，並給我一個這個星期做得到的具體小步驟。|🙏 代禱~請把你剛才說的重點，寫成一段我可以為教會與同工代求的短禱告。","hlSpan":"範圍","spanUnit":"{0} 句","spanP":"整段","makeCard":"做成美圖","readThis":"朗讀","copy":"複製","share":"分享","spanIsP":"這一段已經整段畫起來了","spanDoneP":"已畫整段，共 {0} 句","copied":"已複製","favB":"收藏","xzGoOn":"（剛才的回答因字數上限中斷了。請從中斷的地方直接接著寫完，不要重複前面的內容，也不要加開場白或說明。）","xzExamples":"不知道問甚麼？看看範例","hlShareFail":"這台裝置不能直接分享，已改為複製","noGxu":"美圖工作室還沒載入，請稍後再試","xzOptT":"回答選項","xzCtxL":"小智還在接著寫…"},"zs":{"audT":"小智的回答对象","auds":"🧑 成人|🧒 青少年|🧸 儿童|🌱 慕道友|👴 长辈|👩‍👧 单亲|🙋 单身|👨‍👩‍👧 父母|💑 夫妻|⛪ 牧者","audNow":"回答对象：{0}　▾","audSet":"小智会用「{0}」听得懂的方式回答","audD_adult":"有深度，贴近工作、家庭与关系","audD_teen":"幽默风趣、不说教，用你的世界来比喻","audD_kid":"非常简单好懂，像在听故事","audD_seeker":"还没信主也听得懂，不说教，给实际的帮助","aud_adult":"【回答对象】成年读者：口吻成熟、温暖、真诚。","aud_teen":"【回答对象】青少年：像朋友聊天，幽默风趣，可以有一点梗，但不说教、不轻浮，也绝不拿神和圣经开玩笑。","aud_kid":"【回答对象】儿童（5–11 岁）：非常浅显，短句，像说故事，一句只讲一件事，不用艰深名词。","aud_seeker":"【回答对象】慕道友（还没信主的朋友）：从他的处境与疑问切入，再带到经文；用最平常的话，不用「无己、作王、得胜、属灵」等教会内部用语，必须用的词立刻用生活说法解释；诚实、尊重、不说教、不施压、不要求现在就相信；清楚说出神是怎样的神、耶稣为我们做了什么；给一两个这星期就能试的小步骤；祷告只当作「若你愿意，可以这样对神说」的邀请。","prayRule":"\n【祷告的写法（一定要照做）】回答里凡要写祷告，那一段的小标题一律写「凭信心祷告」，不要写「为你祷告」「我为你祷告」或「一起祷告」。祷告前先用一句话邀请读者自己开口，例如「请你凭信心，亲口向主这样祷告：」。祷告本身要用读者的第一人称，写成读者自己向神说的话；不要写成小智替读者祷告，不要出现「这位」「他／她」等第三人称。祷告要简短、真诚、带着信心交托与感恩，结尾一律用「奉主耶稣的名祷告，阿们。」","fu_adult":"💑 用在婚姻~请把你刚才的回答，用在夫妻关系里，给我一个具体做法。|🏠 用在家庭~请把你刚才的回答，用在和家人的相处上。|💼 用在职场~请把你刚才的回答，用在职场与同事相处上。|💗 我的内心~如果我心里还在挣扎，你刚才的回答可以怎样帮助我？|🙏 带我祷告~请依你刚才的回答，带我凭信心祷告。","fu_teen":"🏫 在学校~把你刚才说的，用在学校和同学身上会怎样？|👫 跟朋友~跟朋友相处时，我可以怎么做？|📱 手机网路~这和我用手机、上网有什么关系？|💪 今天挑战~给我一个今天就能做的小挑战。|🙏 一起祷告~请用简单的话带我祷告。","fu_kid":"🏠 在家里~在家里我可以怎么做？|🏫 在学校~在学校我可以怎么做？|📖 说个故事~可以用一个小故事告诉我吗？|🙏 小祷告~教我一句小小的祷告。","fu_seeker":"🤔 我还有疑问~我还是有些疑问，可以再用平常的话解释吗？|🚶 下一步~如果我想多了解，这个星期可以先做什么？|💭 人生意义~这和我人生的意义有什么关系？|🙏 试着祷告~如果我想试着和神说话，可以怎么说？","bgs":"🌱 没有信仰|☸️ 佛教|🏮 民间信仰|🕯️ 一贯道|☪️ 穆斯林|🔬 无神论","bgNames":"没有信仰|佛教|民间信仰|一贯道|穆斯林|无神论者","bgT":"信仰背景：","lenT":"长度：","lens":"简要|适中|详细","lenSet":"小智接着用「{0}」重新回答","lenSet2":"已改为「{0}」，下次提问就会照这个长度回答","bgSet":"小智接着以「{0}」的角度重新回答","bgSet2":"已改为「{0}」，下次提问就会照这个角度回答","lenSys_brief":"\n【回答长度：简要】只用3～5句话，约150字：先给核心答案，加上一句经文或一个比喻，最后一句祷告或一个小步骤；不用表格，不列长清单。","lenSys_full":"\n【回答长度：详细】约800～1200字：说明经文脉络、关键字词、相关经文对照，连结321应用与本周操练，最后写祷告；可使用短小的标题。","skbg_none":"\n【信仰背景：没有信仰】不预设任何宗教词汇，从对方的生活处境（压力、关系、意义、不安）切入；一次只讲一个重点，用日常说法，避免「无己、作王、得胜」等内部用语。\n共通原则：保持尊重与爱心，不嘲笑、不施压、不要求对方立刻决定；诚实而温和地说明基督信仰；先回答对方真正的问题，再连结到目前这个主题。","skbg_buddhism":"\n【信仰背景：佛教】不贬低佛陀与修行，不使用「拜偶像、迷信」等字眼；先肯定佛教对苦、无常、慈悲的重视，再说明圣经所说有位格的创造主、白白的恩典（不靠功德）、一世生命而非轮回；不乱用佛教名词。\n共通原则：保持尊重与爱心，不嘲笑、不施压、不要求对方立刻决定；诚实而温和地说明基督信仰；先回答对方真正的问题，再连结到目前这个主题。","skbg_folk":"\n【信仰背景：民间信仰】尊重孝心与祭祖的心意，先肯定圣经本来就教导孝敬父母；再说明敬拜归给独一真神；关心拜拜背后对平安与保佑的需要，并温和说明祭祖与追思的不同；不要求对方立刻改变家人的习惯。\n共通原则：保持尊重与爱心，不嘲笑、不施压、不要求对方立刻决定；诚实而温和地说明基督信仰；先回答对方真正的问题，再连结到目前这个主题。","skbg_yiguandao":"\n【信仰背景：一贯道】尊重吃素与重视伦理的生活，不批评师尊、道场与仪式，也不自己推断教义细节；从对「天」的敬畏谈起，再温和说明约翰福音14:6，耶稣是通往天父的道路。\n共通原则：保持尊重与爱心，不嘲笑、不施压、不要求对方立刻决定；诚实而温和地说明基督信仰；先回答对方真正的问题，再连结到目前这个主题。","skbg_muslim":"\n【信仰背景：穆斯林】以最大的敬意对谈，不辱骂、不嘲讽、不施压劝对方改教（考虑其家庭与社群的代价）；从独一的神，以及亚伯拉罕、摩西、大卫谈起；只引用圣经；清楚说明基督徒信的不是三个神；可比较「靠行为得救」与「靠恩典得救」；避免使用与猪肉、酒有关的比喻。\n共通原则：保持尊重与爱心，不嘲笑、不施压、不要求对方立刻决定；诚实而温和地说明基督信仰；先回答对方真正的问题，再连结到目前这个主题。","skbg_atheist":"\n【信仰背景：无神论者】尊重理性与证据，不说「只要信就好」，不把对方的想法稻草人化；诚实承认对苦难与宗教历史错误的质疑很有分量，也承认哪些事无法用科学证明；从道德直觉、人生意义、宇宙秩序与耶稣的历史记载谈起；语气平等、好奇、不防卫。\n共通原则：保持尊重与爱心，不嘲笑、不施压、不要求对方立刻决定；诚实而温和地说明基督信仰；先回答对方真正的问题，再连结到目前这个主题。","audNowS":"回答对象：{0} ▾","audD_elder":"尊敬温和、慢慢说，句子清楚好懂","audD_single_parent":"先接住你的辛苦，给做得到的小步骤与盼望","audD_single":"真诚平等，不催婚，谈身分、等待与使命","audD_parent":"贴近养儿育女的日常：沟通、管教、陪伴与祷告","audD_couple":"夫妻同行：沟通、饶恕、同心与一起祷告","audD_pastor":"同工口吻：牧养、讲道预备、团队与不倦怠","aud_elder":"【回答对象】回答对象：长辈（约65岁以上）。请用尊敬、温和、慢慢说的口吻，像晚辈敬重地陪长辈读经；句子清楚、不拐弯，不用网路用语和英文缩写；比喻取自一生的阅历（田地、家人、岁月、病痛、孙子、老街坊）。重点先讲，分成短段落，不要太长。肯定他们一生走过的路与在主里的忠心，不说教、不指责、不用「你应该」。可以谈健康与软弱、孤单、放下与交托、把信仰传给下一代、永恒的盼望与感恩。结尾给一件简单、容易做到的小事（一句祷告、打电话问候家人、数算一件感谢）。若提到身体不适、孤单或失去亲人，要先温柔安慰，并鼓励他和家人、教会关怀同工联络。","fu_elder":"🩺 健康~请针对你刚才的回答，用简单清楚、慢慢说的话说明怎么把它用在身体的软弱与健康，并给我一个这个星期做得到的具体小步骤。|🤍 孤单~请针对你刚才的回答，用简单清楚、慢慢说的话说明怎么把它用在孤单与思念，并给我一个这个星期做得到的具体小步骤。|👨‍👩‍👧‍👦 儿孙~请针对你刚才的回答，用简单清楚、慢慢说的话说明怎么把它用在和儿孙、家人的关系，并给我一个这个星期做得到的具体小步骤。|🕊️ 交托~请针对你刚才的回答，用简单清楚、慢慢说的话说明怎么把它用在放下心中的牵挂、交托给主，并给我一个这个星期做得到的具体小步骤。|🌅 盼望~请针对你刚才的回答，用简单清楚、慢慢说的话说明怎么把它用在永恒的盼望与感恩，并给我一个这个星期做得到的具体小步骤。|🙏 祷告~请把你刚才说的重点，用简单的话写成一段短短的祷告，让我可以慢慢念给主听。","aud_single_parent":"【回答对象】回答对象：单亲爸爸或妈妈（一个人撑起一个家）。请先接住他的辛苦：他常常很累、有愧疚、有孤单，也有经济、时间与教养的压力。口吻温暖、接纳、不评断，不追问过去的原因，不说「你应该再找个伴」，也不把单亲说成缺憾。引用神的心意：神是孤儿的父、寡妇的伸冤者（诗篇68:5），祂与我们同在。再给盼望与实际：每一个小步骤都要在忙碌中做得到（五分钟祷告、跟孩子的一个小仪式、开口向弟兄姐妹求助）。内容简短、段落要短。结尾给一个这个星期做得到的小步骤。若他提到被暴力对待、疲惫到撑不下去或想伤害自己，要温柔回应，并鼓励他立刻联络信任的人、教会同工或专业协助。","fu_single_parent":"😮‍💨 疲累~请针对你刚才的回答，说明怎么把它用在一个人撑家的疲累与内疚，并给我一个这个星期做得到的具体小步骤。|👧 孩子~请针对你刚才的回答，说明怎么把它用在陪伴孩子与教养，并给我一个这个星期做得到的具体小步骤。|💰 经济~请针对你刚才的回答，说明怎么把它用在经济与时间的压力，并给我一个这个星期做得到的具体小步骤。|🤝 求助~请针对你刚才的回答，说明怎么把它用在向弟兄姐妹或教会开口求助，并给我一个这个星期做得到的具体小步骤。|🌤️ 盼望~请针对你刚才的回答，说明怎么把它用在在这个阶段看见神的同在与盼望，并给我一个这个星期做得到的具体小步骤。|🙏 祷告~请把你刚才说的重点，写成一段我在忙碌中五分钟内就能祷告完的短祷告。","aud_single":"【回答对象】回答对象：单身的人（可能未婚、离婚、丧偶，或正在等候；不要预设他想结婚或不想结婚）。请不要把单身说成缺憾、「预备期」或「还没到的人生」，也不要用催婚的口气。谈在基督里的身分已经完整、被爱；谈孤单时怎么与神、与朋友、与团契连结；谈时间、金钱与恩赐的运用与使命；谈等待中的信靠；谈感情与婚姻的智慧，以及在情感与身体上的圣洁，态度要尊重、不论断。口吻真诚、平等、轻松。结尾给一个这个星期可以做的小步骤。若他提到孤单到想伤害自己，要温柔回应并鼓励他立刻联络信任的人或专业协助。","fu_single":"🫶 孤单~请针对你刚才的回答，说明怎么把它用在孤单时怎么与神、与朋友连结，并给我一个这个星期做得到的具体小步骤。|💝 身分~请针对你刚才的回答，说明怎么把它用在我在基督里的身分与价值，并给我一个这个星期做得到的具体小步骤。|⏳ 等待~请针对你刚才的回答，说明怎么把它用在等待中的信靠，并给我一个这个星期做得到的具体小步骤。|💞 感情~请针对你刚才的回答，说明怎么把它用在感情与交友的智慧，并给我一个这个星期做得到的具体小步骤。|🎯 使命~请针对你刚才的回答，说明怎么把它用在把时间与恩赐用在神的使命上，并给我一个这个星期做得到的具体小步骤。|🙏 祷告~请把你刚才说的重点，写成一段简短、真诚的祷告，让我可以拿来祷告。","aud_parent":"【回答对象】回答对象：正在养育孩子的父母（孩子可能从婴幼儿到成年）。请站在父母的位置：他们常常疲累、担心孩子、也常常内疚。口吻温暖、贴近生活、不评断；承认每个孩子与每个家庭都不同。谈陪伴与榜样、管教与恩典的平衡、亲子沟通（怎么听、怎么说）、为孩子祷告、夫妻同心、面对自己的软弱与失败；可用日常场景当比喻（吃饭、功课、手机、睡前）。结尾给一个这个星期可以做的具体小步骤（一句话、一个拥抱、一段睡前祷告）。若提到孩子遭受伤害、家庭暴力或孩子有自伤的念头，要温柔回应并鼓励立刻寻求专业协助与信任的人。","fu_parent":"🗣️ 沟通~请针对你刚才的回答，说明怎么把它用在跟孩子好好沟通（怎么听、怎么说），并给我一个这个星期做得到的具体小步骤。|⚖️ 管教~请针对你刚才的回答，说明怎么把它用在管教与恩典的平衡，并给我一个这个星期做得到的具体小步骤。|😔 内疚~请针对你刚才的回答，说明怎么把它用在对孩子发脾气或觉得亏欠的内疚，并给我一个这个星期做得到的具体小步骤。|💑 夫妻~请针对你刚才的回答，说明怎么把它用在夫妻在教养上同心，并给我一个这个星期做得到的具体小步骤。|📖 信仰~请针对你刚才的回答，说明怎么把它用在带孩子认识神、一起亲近神，并给我一个这个星期做得到的具体小步骤。|🙏 祷告~请把你刚才说的重点，写成一段我可以为孩子祝福的短祷告。","aud_couple":"【回答对象】回答对象：夫妻（正在经营婚姻的丈夫与妻子，可能是新婚、有孩子的中年夫妻，或相伴多年的伴侶）。请站在夫妻同行的位置：口吻温暖、真诚、不评断，不偏袒任何一方；承认每段婚姻都有磨合、疲累与受伤的时候。谈爱是决定与付出、彼此饶恕、倾听与表达（怎么说、怎么听）、尊重与同心、金钱与家务的分工、姻亲与孩子的教养、一起祷告与一起读经、在主里成为一体；可用日常场景当比喻（饭桌、手牵手、吵完架之后、睡前）。结尾给一个这个星期两个人就能一起做的具体小步骤（一句感谢的话、一段两人的祷告、一次不看手机的散步）。不要教导妻子顺服或丈夫掌权的单方面要求，要强调彼此相爱、彼此顺服。若提到家庭暴力、外遇、对方的威胁或有自伤念头，要温柔回应，把安全放在第一位，并鼓励立刻寻求专业协助与信任的人，不要劝人一味忍耐。","fu_couple":"🗣️ 沟通~请针对你刚才的回答，说明夫妻怎么把它用在好好说、好好听，并给我们一个这个星期两个人做得到的具体小步骤。|🤝 饶恕~请针对你刚才的回答，说明夫妻怎么把它用在彼此认错与饶恕，并给我们一个这个星期两个人做得到的具体小步骤。|💞 亲密~请针对你刚才的回答，说明夫妻怎么把它用在重新连结感情、表达爱与感谢，并给我们一个这个星期两个人做得到的具体小步骤。|👨‍👩‍👧 同心~请针对你刚才的回答，说明夫妻怎么把它用在金钱、家务与教养上同心，并给我们一个这个星期两个人做得到的具体小步骤。|📖 同读~请针对你刚才的回答，说明夫妻怎么一起读经、一起亲近神，并给我们一个这个星期两个人做得到的具体小步骤。|🙏 祷告~请把你刚才说的重点，写成一段夫妻可以一起祷告的短祷告。","aud_pastor":"【回答对象】回答对象：牧者与传道同工（教会的牧师、传道人、小组长与事奉的同工）。请站在同工的位置：他们常常肩负许多人的重担，自己也会疲累、孤单、被误解或灰心。口吻尊重、平等、真诚，像同工之间彼此扶持，不说教、不居高临下。可以有适度的深度：点出经文脉络、原文语境与关键字词的意思，谈牧养羊群与生命建造、预备讲道与教导、带领小组与门徒训练、团队同心与冲突、面对批评与孤单、属灵争战、自己的灵命与家庭，以及不倦怠的安息与依靠；也可提供讲章或查经的切入点、段落与应用建议，但要提醒最后仍须自己在神面前领受。结尾给一个这个星期可以做的具体小步骤（一段安静亲近神的时间、一通关心的电话、一次向同工的坦诚分享）。若提到极度疲惫、忧郁、想放弃或有自伤念头，要温柔回应，并鼓励立刻寻求信任的同工、属灵长辈与专业协助。","fu_pastor":"📖 讲道~请针对你刚才的回答，提供一个可用于讲道或查经的架构（三个要点与一个应用），并提醒我自己先在神面前领受。|🐑 牧养~请针对你刚才的回答，说明怎么把它用在牧养羊群与关心个别的人，并给我一个这个星期做得到的具体小步骤。|🤝 团队~请针对你刚才的回答，说明怎么把它用在带领团队、同工同心与处理冲突，并给我一个这个星期做得到的具体小步骤。|🕊️ 安息~请针对你刚才的回答，说明怎么把它用在自己的疲累与灵命保守，并给我一个这个星期做得到的具体小步骤。|⚔️ 争战~请针对你刚才的回答，说明怎么把它用在面对批评、孤单与属灵争战，并给我一个这个星期做得到的具体小步骤。|🙏 代祷~请把你刚才说的重点，写成一段我可以为教会与同工代求的短祷告。","hlSpan":"范围","spanUnit":"{0} 句","spanP":"整段","makeCard":"做成美图","readThis":"朗读","copy":"复制","share":"分享","spanIsP":"这一段已经整段画起来了","spanDoneP":"已画整段，共 {0} 句","copied":"已复制","favB":"收藏","xzGoOn":"（刚才的回答因字数上限中断了。请从中断的地方直接接着写完，不要重复前面的内容，也不要加开场白或说明。）","xzExamples":"不知道问什么？看看范例","hlShareFail":"这台设备不能直接分享，已改为复制","noGxu":"美图工作室还没载入，请稍后再试","xzOptT":"回答选项","xzCtxL":"小智还在接着写…"},"en":{"audT":"Who Xiaozhi is answering","auds":"🧑 Adult|🧒 Teen|🧸 Kid|🌱 Seeker|👴 Elder|👩‍👧 Single parent|🙋 Single|👨‍👩‍👧 Parent|💑 Couple|⛪ Pastor","audNow":"Answering: {0}　▾","audSet":"Xiaozhi will answer in a way \"{0}\" can understand","audD_adult":"In depth, close to work, family, and relationships","audD_teen":"Funny and fun, no preaching, using metaphors from your world","audD_kid":"Very simple and easy to understand, like listening to a story","audD_seeker":"Understandable even if you don't yet believe; no preaching, with practical help","aud_adult":"[Audience] Adult reader: a mature, warm, sincere tone.","aud_teen":"[Audience] Teen: like chatting with a friend, humorous and fun, with a few jokes allowed, but no preaching and no flippancy, and never joke about God or the Bible.","aud_kid":"[Audience] Child (ages 5-11): very simple, short sentences, like telling a story, one thing per sentence, no difficult terms.","aud_seeker":"[Audience] Seeker (a friend who does not yet believe): start from their situation and questions, then bring in the Scripture; use the plainest words, and avoid church insider terms such as \"selflessness, let Jesus be King, victory, spiritual\"; if such a term is needed, explain it right away in everyday language; be honest and respectful, no preaching, no pressure, and do not ask them to believe right now; state clearly what kind of God he is and what Jesus has done for us; give one or two small steps they can try this week; treat prayer only as an invitation: \"if you are willing, you could say this to God.\"","prayRule":"\n[How to write prayers (must follow)] Whenever the answer includes a prayer, always give that section the heading \"Pray in Faith\"; do not write \"Praying for you\", \"I pray for you\", or \"Let's pray together\". Before the prayer, use one sentence to invite the reader to speak it themselves, for example \"Please pray this to the Lord yourself, in faith:\". Write the prayer in the reader's first person, as words the reader says to God; do not write it as Xiaozhi praying on the reader's behalf, and do not use third-person words such as \"this person\" or \"he/she\". Keep the prayer short and sincere, full of faith, trust, and thanksgiving, and always end with \"In the name of the Lord Jesus Christ, I pray. Amen.\"","fu_adult":"💑 In marriage~Please apply your answer just now to the marriage relationship and give me a concrete way to do it.|🏠 In family~Please apply your answer just now to how I get along with my family.|💼 At work~Please apply your answer just now to getting along with colleagues at work.|💗 My heart~If I am still struggling inside, how can your answer just now help me?|🙏 Lead me in prayer~Based on your answer just now, please lead me to pray in faith.","fu_teen":"🏫 At school~What would it look like to apply what you just said at school with classmates?|👫 With friends~What can I do when I'm with friends?|📱 Phone and internet~How does this relate to my phone and going online?|💪 Today's challenge~Give me a small challenge I can do today.|🙏 Pray together~Please lead me in prayer using simple words.","fu_kid":"🏠 At home~What can I do at home?|🏫 At school~What can I do at school?|📖 Tell a story~Can you tell me with a little story?|🙏 Little prayer~Teach me a short little prayer.","fu_seeker":"🤔 I still have questions~I still have some questions. Can you explain again in everyday words?|🚶 Next step~If I want to learn more, what can I do first this week?|💭 Meaning of life~How does this relate to the meaning of my life?|🙏 Try praying~If I want to try talking to God, what could I say?","bgs":"🌱 No faith|☸️ Buddhism|🏮 Folk religion|🕯️ Yiguandao|☪️ Muslim|🔬 Atheist","bgNames":"No faith|Buddhism|Folk religion|Yiguandao|Muslim|Atheist","bgT":"Faith background: ","lenT":"Length: ","lens":"Brief|Medium|Detailed","lenSet":"Xiaozhi will now answer again in \"{0}\"","lenSet2":"Changed to \"{0}\". The next question will be answered at this length.","bgSet":"Xiaozhi will now answer again from the \"{0}\" perspective","bgSet2":"Changed to \"{0}\". The next question will be answered from this perspective.","lenSys_brief":"\n[Answer length: Brief] Use only 3 to 5 sentences, about 100 words: give the core answer first, add one Bible verse or one metaphor, and finish with one sentence of prayer or one small step; no tables, no long lists.","lenSys_full":"\n[Answer length: Detailed] About 500 to 800 words: explain the context of the Scripture, key words and phrases, and cross-references to related passages, connect to 321 application and this week's practice, and end with a prayer; short headings may be used.","skbg_none":"\n[Faith background: no faith] Presume no religious vocabulary; start from the person's life situation (stress, relationships, meaning, unease); make only one point at a time, in everyday language, avoiding insider terms such as \"selflessness, let Jesus be King, victory\".\n【Rules for every background】Stay respectful and loving; never mock, pressure, or demand an immediate decision; explain the Christian faith honestly and gently; answer the person's real question first, then connect it to the current topic.","skbg_buddhism":"\n[Faith background: Buddhism] Do not belittle the Buddha or Buddhist practice, and do not use words like \"idol worship\" or \"superstition\"; first affirm Buddhism's attention to suffering, impermanence, and compassion, then explain what the Bible says about a personal Creator, grace that is free (not by merit), and one life rather than reincarnation; do not misuse Buddhist terms.\n【Rules for every background】Stay respectful and loving; never mock, pressure, or demand an immediate decision; explain the Christian faith honestly and gently; answer the person's real question first, then connect it to the current topic.","skbg_folk":"\n[Faith background: folk religion] Respect filial piety and the heart behind honoring ancestors; first affirm that the Bible itself teaches honoring parents; then explain that worship belongs to the one true God; care about the need for peace and protection behind the worship rituals, and gently explain the difference between ancestor worship and remembrance; do not ask the person to change family customs right away.\n【Rules for every background】Stay respectful and loving; never mock, pressure, or demand an immediate decision; explain the Christian faith honestly and gently; answer the person's real question first, then connect it to the current topic.","skbg_yiguandao":"\n[Faith background: Yiguandao] Respect vegetarian living and a life that values ethics; do not criticize the master, the temple, or the rituals, and do not infer doctrinal details yourself; start from reverence for \"Heaven\", then gently explain John 14:6, that Jesus is the way to the Father.\n【Rules for every background】Stay respectful and loving; never mock, pressure, or demand an immediate decision; explain the Christian faith honestly and gently; answer the person's real question first, then connect it to the current topic.","skbg_muslim":"\n[Faith background: Muslim] Converse with the greatest respect; no insults, no mockery, and no pressure to convert (consider the cost to their family and community); start from the one God and from Abraham, Moses, and David; quote only the Bible; state clearly that Christians do not believe in three gods; you may compare \"salvation by works\" with \"salvation by grace\"; avoid metaphors involving pork or alcohol.\n【Rules for every background】Stay respectful and loving; never mock, pressure, or demand an immediate decision; explain the Christian faith honestly and gently; answer the person's real question first, then connect it to the current topic.","skbg_atheist":"\n[Faith background: atheist] Respect reason and evidence; do not say \"just believe\", and do not strawman their views; honestly acknowledge that doubts about suffering and the historical mistakes of religion carry weight, and admit what cannot be proven by science; start from moral intuition, the meaning of life, the order of the universe, and the historical records of Jesus; keep a tone that is equal, curious, and not defensive.\n【Rules for every background】Stay respectful and loving; never mock, pressure, or demand an immediate decision; explain the Christian faith honestly and gently; answer the person's real question first, then connect it to the current topic.","audNowS":"Answering: {0} ▾","audD_elder":"Respectful and gentle, spoken slowly, with clear and easy sentences","audD_single_parent":"First acknowledges how hard it is, then gives doable small steps and hope","audD_single":"Sincere and equal; no pressure to marry; talks about identity, waiting, and calling","audD_parent":"Close to the daily life of raising children: communication, discipline, companionship, and prayer","audD_couple":"Walking together as a couple: communication, forgiveness, unity, and praying together","audD_pastor":"Fellow-worker tone: shepherding, sermon preparation, teams, and avoiding burnout","aud_elder":"[Audience] Audience: an elder (about 65 and older). Speak respectfully, gently and unhurriedly, like a younger person reading Scripture with an older one they honour. Short, clear sentences; no internet slang or abbreviations; pictures from a long life (fields, family, the years, illness, grandchildren, old neighbours). Main point first, in short paragraphs. Honour the road they have walked and their faithfulness in the Lord; never preach, scold, or say \"you should\". You may speak of health and frailty, loneliness, letting go and entrusting, passing faith to the next generation, eternal hope and gratitude. End with one simple thing that is easy to do (a short prayer, a phone call to family, counting one blessing). If they mention illness, loneliness or loss, comfort them first and encourage them to reach out to family or the church care team.","fu_elder":"🩺 Health~Based on your answer, explain how to apply it to physical frailty and health, and give me one concrete step I can take this week.|🤍 Loneliness~Based on your answer, explain how to apply it to loneliness and missing loved ones, and give me one concrete step I can take this week.|👨‍👩‍👧‍👦 Family~Based on your answer, explain how to apply it to my relationship with my children and grandchildren, and give me one concrete step I can take this week.|🕊️ Entrusting~Based on your answer, explain how to apply it to letting go of my worries and entrusting them to the Lord, and give me one concrete step I can take this week.|🌅 Hope~Based on your answer, explain how to apply it to eternal hope and gratitude, and give me one concrete step I can take this week.|🙏 Prayer~Please turn the key point of your answer into a short, simple prayer I can read slowly to the Lord.","aud_single_parent":"[Audience] Audience: a single parent (carrying a household alone). First receive their weariness: they are often exhausted, carry guilt and loneliness, and face pressure over money, time and raising children. Be warm, accepting and non-judging; do not ask why they are single, never say \"you should find a partner\", and never describe single parenting as a lack. Bring in God's heart: he is a father to the fatherless and a defender of widows (Psalm 68:5), and he is with us. Then give hope and practicality — every small step must be doable in a busy life (a five-minute prayer, one small ritual with the child, asking brothers and sisters for help). Keep it short, in short paragraphs. End with one step they can take this week. If they mention being abused, being too exhausted to go on, or wanting to harm themselves, answer gently and encourage them to contact someone they trust, a church worker or professional help right away.","fu_single_parent":"😮‍💨 Weary~Based on your answer, explain how to apply it to the weariness and guilt of carrying a family alone, and give me one concrete step I can take this week.|👧 Child~Based on your answer, explain how to apply it to being with my child and parenting, and give me one concrete step I can take this week.|💰 Money~Based on your answer, explain how to apply it to pressure over money and time, and give me one concrete step I can take this week.|🤝 Help~Based on your answer, explain how to apply it to asking brothers, sisters or the church for help, and give me one concrete step I can take this week.|🌤️ Hope~Based on your answer, explain how to apply it to seeing God's presence and hope in this season, and give me one concrete step I can take this week.|🙏 Prayer~Please turn the key point of your answer into a short prayer I can finish in five minutes in the middle of a busy day.","aud_single":"[Audience] Audience: a single person (never married, divorced, widowed, or still waiting — do not assume they want or do not want to marry). Never describe being single as a lack, a \"preparation stage\" or \"life not yet begun\", and never use a pushy-about-marriage tone. Speak of an identity in Christ that is already whole and loved; of connecting with God, friends and fellowship in loneliness; of using time, money and gifts for a purpose; of trusting while waiting; of wisdom in dating and marriage and of purity in heart and body, respectfully and without judging. Be sincere, equal and light. End with one step they can take this week. If they mention loneliness so deep they want to harm themselves, answer gently and encourage them to contact someone they trust or professional help right away.","fu_single":"🫶 Loneliness~Based on your answer, explain how to apply it to connecting with God and friends when I feel lonely, and give me one concrete step I can take this week.|💝 Identity~Based on your answer, explain how to apply it to my identity and worth in Christ, and give me one concrete step I can take this week.|⏳ Waiting~Based on your answer, explain how to apply it to trusting God while I wait, and give me one concrete step I can take this week.|💞 Relationships~Based on your answer, explain how to apply it to wisdom in dating and friendship, and give me one concrete step I can take this week.|🎯 Purpose~Based on your answer, explain how to apply it to using my time and gifts for God's purposes, and give me one concrete step I can take this week.|🙏 Prayer~Please turn the key point of your answer into a short, sincere prayer I can pray.","aud_parent":"[Audience] Audience: a parent raising children (from babies to adult children). Stand in the parent's shoes: they are often tired, worried about their children, and often feel guilty. Be warm, down-to-earth and non-judging; acknowledge that every child and every family is different. Speak of presence and example, balancing discipline and grace, parent–child communication (how to listen, how to speak), praying for children, husband and wife standing together, and facing one's own weakness and failure; use everyday scenes as pictures (mealtime, homework, phones, bedtime). End with one concrete step for this week (one sentence, a hug, a bedtime prayer). If a child is being harmed, there is domestic violence, or the child has thoughts of self-harm, answer gently and encourage seeking professional help and a trusted person right away.","fu_parent":"🗣️ Talking~Based on your answer, explain how to apply it to communicating well with my child (how to listen, how to speak), and give me one concrete step I can take this week.|⚖️ Discipline~Based on your answer, explain how to apply it to balancing discipline and grace, and give me one concrete step I can take this week.|😔 Guilt~Based on your answer, explain how to apply it to the guilt of losing my temper or feeling I owe my child more, and give me one concrete step I can take this week.|💑 Spouse~Based on your answer, explain how to apply it to husband and wife being united in parenting, and give me one concrete step I can take this week.|📖 Faith~Based on your answer, explain how to apply it to leading my child to know God and drawing near to him together, and give me one concrete step I can take this week.|🙏 Prayer~Please turn the key point of your answer into a short prayer of blessing I can pray over my child.","aud_couple":"[Audience] Audience: a married couple (husband and wife — newlyweds, parents in the thick of life, or long-time partners). Stand beside them as a fellow traveler: warm, sincere, never judging and never taking one side; admit every marriage has seasons of friction, weariness and hurt. Speak of love as a decision and a gift, forgiving one another, listening and speaking well, respect and unity, money and household work, in-laws and raising children, praying and reading Scripture together, becoming one in the Lord. Use everyday pictures (the dinner table, holding hands, after an argument, bedtime). Close with one small step the two of them can do together this week (a word of thanks, a short prayer together, a phone-free walk). Never lay one-sided demands on the wife to submit or the husband to rule; stress mutual love and mutual submission. If domestic violence, an affair, threats or thoughts of self-harm come up, respond gently, put safety first, and encourage reaching out at once to professionals and trusted people — never urge someone just to endure.","fu_couple":"🗣️ Talking~Based on your answer, show how a couple can apply it to speaking and listening well, and give us one small step we can both do this week.|🤝 Forgiving~Based on your answer, show how a couple can apply it to owning mistakes and forgiving, and give us one small step we can both do this week.|💞 Closeness~Based on your answer, show how a couple can apply it to reconnecting and expressing love and thanks, and give us one small step we can both do this week.|👨‍👩‍👧 Unity~Based on your answer, show how a couple can apply it to being united on money, chores and parenting, and give us one small step we can both do this week.|📖 Together~Based on your answer, show how a couple can read Scripture and draw near to God together, and give us one small step we can both do this week.|🙏 Prayer~Turn the main points of your answer into a short prayer a couple can pray together.","aud_pastor":"[Audience] Audience: a pastor or ministry worker (pastor, preacher, small-group leader, church staff or volunteer). Stand beside them as a fellow worker: they carry many people's burdens and can themselves be weary, lonely, misunderstood or discouraged. Be respectful, equal and sincere — never lecturing or talking down. You may go deeper: the context of the passage, the sense of key words, shepherding and building lives, sermon and lesson preparation, leading groups and discipleship, team unity and conflict, criticism and loneliness, spiritual warfare, one's own walk and family, and resting in God without burning out. You may offer a sermon or Bible-study outline with points and applications, but remind them to receive the word from God themselves first. Close with one small step for this week (a quiet hour with God, a caring phone call, an honest talk with a coworker). If extreme exhaustion, depression, wanting to quit or self-harm come up, respond gently and encourage reaching out at once to trusted coworkers, spiritual elders and professionals.","fu_pastor":"📖 Sermon~Based on your answer, give a sermon or Bible-study outline (three points and one application), and remind me to receive it from God first.|🐑 Shepherd~Based on your answer, show how to apply it to shepherding the flock and caring for individuals, and give me one small step for this week.|🤝 Team~Based on your answer, show how to apply it to leading a team, unity among coworkers and handling conflict, and give me one small step for this week.|🕊️ Rest~Based on your answer, show how to apply it to my own weariness and guarding my walk with God, and give me one small step for this week.|⚔️ Warfare~Based on your answer, show how to apply it to criticism, loneliness and spiritual warfare, and give me one small step for this week.|🙏 Intercede~Turn the main points of your answer into a short prayer I can pray for the church and my coworkers.","hlSpan":"Range","spanUnit":"{0} sent.","spanP":"Whole paragraph","makeCard":"Make a picture","readThis":"Listen","copy":"Copy","share":"Share","spanIsP":"The whole paragraph is already highlighted","spanDoneP":"Whole paragraph highlighted ({0} sentences)","copied":"Copied","favB":"Save","xzGoOn":"(Your previous answer was cut off by the length limit. Continue exactly where it stopped; do not repeat earlier text or add any preamble.)","xzExamples":"Not sure what to ask? See examples","hlShareFail":"Sharing is not available here — copied instead","noGxu":"The card studio is not ready yet — try again shortly","xzOptT":"Answer options","xzCtxL":"Sage AI is still writing…"}};
+  function tx(k) {
+    var d = XP[state.lang] || XP.zh, s = d[k]; if (s == null) s = XP.zh[k]; if (s == null) s = k;
+    for (var i = 1; i < arguments.length; i++) s = String(s).split("{" + (i - 1) + "}").join(arguments[i]);
+    return s;
+  }
+  var AUD_KEYS = ["adult", "teen", "kid", "seeker", "elder", "single_parent", "single", "parent", "couple", "pastor"];
+  var LEN_KEYS = ["brief", "mid", "full"], BG_KEYS = ["none", "buddhism", "folk", "yiguandao", "muslim", "atheist"];
+  var xzOptOpen = false, xzAudOpen = false;
+  function xo() {
+    var u = state.user; if (!u.xzOpt) u.xzOpt = { aud: "adult", len: "mid", bg: "none" };
+    if (AUD_KEYS.indexOf(u.xzOpt.aud) < 0) u.xzOpt.aud = "adult";
+    if (LEN_KEYS.indexOf(u.xzOpt.len) < 0) u.xzOpt.len = "mid";
+    if (BG_KEYS.indexOf(u.xzOpt.bg) < 0) u.xzOpt.bg = "none";
+    return u.xzOpt;
+  }
+  function xzOptSys() {
+    var o = xo(), s = "\n" + tx("aud_" + o.aud);
+    if (o.aud === "seeker") s += tx("skbg_" + o.bg);
+    if (o.len !== "mid") s += tx("lenSys_" + o.len);
+    return s + tx("prayRule");
+  }
+  function xzOptsHtml() {
+    var o = xo(), L = tx("auds").split("|"), ln = tx("lens").split("|"), bn = tx("bgNames").split("|");
+    var ai = AUD_KEYS.indexOf(o.aud), li = LEN_KEYS.indexOf(o.len), bi = BG_KEYS.indexOf(o.bg), sk = o.aud === "seeker";
+    var sum = L[ai].replace(/^\S+\s/, "") + "　·　" + (sk ? bn[bi] + "　·　" : "") + ln[li];
+    var h = '<button type="button" class="opt-sum" data-xo="toggle"><span>⚙️ ' + esc(L[ai].split(" ")[0]) + " " + esc(sum) + "</span><b>" + (xzOptOpen ? "▲" : "▼") + "</b></button>";
+    if (!xzOptOpen) return h;
+    h += '<div class="opt-body"><div class="optrow"><button type="button" class="qs-toggle aud-tog' + (xzAudOpen ? " on" : "") + '" data-xo="audtog">' + esc(L[ai].split(" ")[0]) + " " + esc(tx("audNowS", L[ai].replace(/^\S+\s/, ""))) + "</button></div>";
+    if (xzAudOpen) {
+      h += '<div class="audgrid">' + AUD_KEYS.map(function (k, i) { return '<button type="button" class="chip' + (i === ai ? " on" : "") + '" data-xo="aud" data-i="' + i + '">' + esc(L[i]) + "</button>"; }).join("") + "</div>";
+      h += '<div class="xs muted" style="margin:6px 0 8px">' + esc(tx("audD_" + o.aud)) + "</div>";
+    }
+    h += '<div class="optline"><span class="optlab">' + esc(tx("lenT")) + "</span>" + ln.map(function (l, i) { return '<button type="button" class="chip' + (i === li ? " on" : "") + '" data-xo="len" data-i="' + i + '">' + esc(l) + "</button>"; }).join("") + "</div>";
+    if (sk) h += '<div class="optline"><span class="optlab">' + esc(tx("bgT")) + "</span>" + tx("bgs").split("|").map(function (l, i) { return '<button type="button" class="chip' + (i === bi ? " on" : "") + '" data-xo="bg" data-i="' + i + '">' + esc(l) + "</button>"; }).join("") + "</div>";
+    return h + "</div>";
+  }
+  function xzFuHtml() {
+    var a = tx("fu_" + xo().aud).split("|"), h = '<div class="fu">';
+    a.forEach(function (x) { var p = x.split("~"); h += '<button type="button" class="fu-chip" data-q="' + esc(p[1] || p[0]) + '">' + esc(p[0]) + "</button>"; });
+    return h + "</div>";
+  }
+  function xzReAnswer(chId, msg) {
+    var ms = chatSession.messages; if (ms.length < 2) return false;
+    var a2 = ms[ms.length - 1], u2 = ms[ms.length - 2];
+    if (a2.role !== "ai" || a2.pending || u2.role !== "user") return false;
+    ms.splice(ms.length - 2, 2); if (msg) uiToast(msg);
+    var ta = qs("#chatIn"); if (!ta) return false; ta.value = u2.text; sendChat(chId); return true;
+  }
+  function xzCutOff(data, txt) {
+    var sr = data && (data.stop_reason || data.finish_reason || (data.choices && data.choices[0] && data.choices[0].finish_reason));
+    if (sr) return sr === "max_tokens" || sr === "length";
+    var s = String(txt || "").replace(/\s+/g, " ").trim(); return s.length > 300 && !/[。！？.!?」』”)）阿們men]$/.test(s);
+  }
+  function xzJoin(a2, b) {
+    b = String(b).replace(/^\s*(好的|好|接續|繼續|继续|Continuing)[，,:：。.!！]?\s*/, "");
+    for (var n = Math.min(80, a2.length, b.length); n >= 6; n--) if (a2.slice(-n) === b.slice(0, n)) return a2 + b.slice(n);
+    var nl = /^(#|>|-|\*|\d+[.、]|\|)/.test(b.trim()) && !/\n$/.test(a2);
+    return a2 + (nl ? "\n\n" : "") + b;
+  }
+  function xzCopy(text, done) {
+    function fb() { try { var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } catch (e) {} if (done) done(); }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { if (done) done(); }, fb); else fb(); } catch (e) { fb(); }
+  }
+  function xzShare(text) {
+    if (navigator.share) { navigator.share({ text: text }).catch(function () {}); return; }
+    xzCopy(text, function () { uiToast(tx("hlShareFail")); });
+  }
+
   function companionSystemPrompt(chId) {
     var d = D();
     var ch = chId ? d.chapters[chId] : null;
@@ -1872,7 +1993,7 @@
         : "\n\n讀者目前所在課別：" + ch.numFull + "　" + ch.title + "（" + ch.partTitle + "）。";
       base += ctx;
     }
-    return base;
+    return base + xzOptSys();
   }
 
   var companionQsOpen = false;
@@ -1905,12 +2026,16 @@
       html += '<button type="button" class="msg-act msg-speak" data-mi="' + mi + '" data-speak-key="msg:' + esc(m.id || "") + '" data-state="idle" aria-label="' + esc(t().readAloud) + '">🔊</button>';
       html += '<button type="button" class="msg-act msg-collapse" data-mi="' + mi + '" hidden></button>';
       html += '<button type="button" class="msg-act msg-fav' + (isFav ? " on" : "") + '" data-mi="' + mi + '">' + (isFav ? "★ " + esc(t().msgSaved) : "☆ " + esc(t().msgSave)) + '</button>';
+      html += '<button type="button" class="msg-act msg-copy" data-mi="' + mi + '">⧉ ' + esc(tx("copy")) + '</button>';
+      html += '<button type="button" class="msg-act msg-share" data-mi="' + mi + '">↗ ' + esc(tx("share")) + '</button>';
       html += '<button type="button" class="msg-act msg-del" data-mi="' + mi + '">🗑 ' + esc(t().msgDelete) + '</button>';
       html += '</div>';
+      if (mi === chatSession.messages.length - 1 && m.ok) html += xzFuHtml();
       html += '</div>';
     });
     html += '</div>';
 
+    html += '<div id="xzOpts">' + xzOptsHtml() + '</div>';
     html += '<button type="button" class="qs-toggle" id="companionQsToggle">' + esc(companionQsOpen ? t().companionQsHide : t().companionQsToggle) + '</button>';
     html += '<div class="qs-panel" id="companionQsPanel" ' + (companionQsOpen ? "" : 'hidden') + '>';
     var qsData = d.companionQs || [];
@@ -1965,6 +2090,15 @@
       var collapseBtn = e.target.closest(".msg-collapse");
       var favBtn = e.target.closest(".msg-fav");
       var delBtn = e.target.closest(".msg-del");
+      var fuBtn = e.target.closest(".fu-chip");
+      var cpBtn = e.target.closest(".msg-copy");
+      var shBtn = e.target.closest(".msg-share");
+      if (fuBtn) { var tf = qs("#chatIn", view); tf.value = fuBtn.getAttribute("data-q"); sendChat(chId2); return; }
+      if (cpBtn || shBtn) {
+        var mm = chatSession.messages[parseInt((cpBtn || shBtn).getAttribute("data-mi"), 10)];
+        if (mm) { var plain2 = stripHtml(mdToHtml(mm.text)); if (cpBtn) xzCopy(plain2, function () { uiToast(tx("copied")); }); else xzShare(plain2); }
+        return;
+      }
       if (speakBtn2) {
         speakToggleForMsg(parseInt(speakBtn2.getAttribute("data-mi"), 10));
         return;
@@ -2003,6 +2137,17 @@
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(chId2); }
     });
 
+    var optsEl = qs("#xzOpts", view);
+    if (optsEl) optsEl.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-xo]"); if (!b) return;
+      var act = b.getAttribute("data-xo"), i2 = parseInt(b.getAttribute("data-i"), 10), o = xo();
+      if (act === "toggle") { xzOptOpen = !xzOptOpen; xzAudOpen = false; }
+      else if (act === "audtog") { xzAudOpen = !xzAudOpen; }
+      else if (act === "aud") { o.aud = AUD_KEYS[i2]; xzAudOpen = false; saveUser(); uiToast(tx("audSet", tx("auds").split("|")[i2].replace(/^\S+\s/, ""))); }
+      else if (act === "len") { o.len = LEN_KEYS[i2]; saveUser(); var lname = tx("lens").split("|")[i2]; renderCompanion(view, chId); if (!xzReAnswer(chId2, tx("lenSet", lname))) uiToast(tx("lenSet2", lname)); return; }
+      else if (act === "bg") { o.bg = BG_KEYS[i2]; saveUser(); var bname = tx("bgNames").split("|")[i2]; renderCompanion(view, chId); if (!xzReAnswer(chId2, tx("bgSet", bname))) uiToast(tx("bgSet2", bname)); return; }
+      var op = qs("#xzOpts", view); if (op) op.innerHTML = xzOptsHtml();
+    });
     qs("#companionQsToggle", view).addEventListener("click", function () {
       companionQsOpen = !companionQsOpen;
       renderCompanion(view, chId);
@@ -2080,13 +2225,11 @@
     chatSession.messages.push({ role: "ai", text: "…", id: thinkingId, pending: true });
     renderCompanion(qs("#view"), chId);
 
-    var payload = {
-      system: companionSystemPrompt(chId),
-      messages: chatSession.messages
-        .filter(function (m) { return m.id !== thinkingId; })
-        .slice(-12)
-        .map(function (m) { return { role: m.role === "user" ? "user" : "assistant", content: m.text }; }),
-    };
+    var baseMsgs = chatSession.messages
+      .filter(function (m) { return m.id !== thinkingId; })
+      .slice(-12)
+      .map(function (m) { return { role: m.role === "user" ? "user" : "assistant", content: m.text }; });
+    while (baseMsgs.length && baseMsgs[0].role !== "user") baseMsgs.shift();
 
     // Look up the "…" placeholder by id (not array index) when the reply lands, since the
     // user may have deleted an earlier message in the meantime and shifted every index.
@@ -2094,25 +2237,42 @@
       for (var i = 0; i < chatSession.messages.length; i++) { if (chatSession.messages[i].id === id) return i; }
       return -1;
     }
-
-    fetch(XIAOZHI_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).then(function (r) {
-      if (!r.ok) throw new Error("proxy error " + r.status);
-      return r.json();
-    }).then(function (data) {
-      var reply = extractReplyText(data);
+    function finish(text) {
       var idx = findMsgIdxById(thinkingId);
-      if (idx >= 0) chatSession.messages[idx] = { role: "ai", text: reply || (state.lang === "en" ? "(no reply)" : "（沒有收到回覆）"), id: thinkingId };
+      if (idx >= 0) chatSession.messages[idx] = { role: "ai", text: text || (state.lang === "en" ? "(no reply)" : "（沒有收到回覆）"), id: thinkingId, ok: !!text };
       renderCompanion(qs("#view"), chId);
       var log2 = qs("#chatlog"); if (log2) log2.scrollTop = log2.scrollHeight;
-    }).catch(function (err) {
+    }
+    function failed() {
       var idx2 = findMsgIdxById(thinkingId);
       if (idx2 >= 0) chatSession.messages[idx2] = { role: "ai", text: (state.lang === "en" ? "Connection error. Please try again." : "連線發生問題，請稍後再試。"), id: thinkingId };
       renderCompanion(qs("#view"), chId);
-    });
+    }
+    // 回答被字數上限截斷（stop_reason=max_tokens 或沒有結束標點）時自動接著問，最多再接 4 次
+    var acc = "";
+    (function round(k) {
+      var ms = baseMsgs.slice();
+      if (k) { ms.push({ role: "assistant", content: acc }); ms.push({ role: "user", content: tx("xzGoOn") }); }
+      var payload = { model: "claude-sonnet-4-6", max_tokens: 1600, system: companionSystemPrompt(chId), messages: ms };
+      fetch(XIAOZHI_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).then(function (r) {
+        if (!r.ok) throw new Error("proxy error " + r.status);
+        return r.json();
+      }).then(function (data) {
+        var reply = extractReplyText(data);
+        if (!reply) { if (acc) finish(acc); else finish(""); return; }
+        acc = k ? xzJoin(acc, reply) : reply;
+        if (k < 4 && xzCutOff(data, acc)) {
+          var idx3 = findMsgIdxById(thinkingId);
+          if (idx3 >= 0) { chatSession.messages[idx3].text = acc + " …"; renderCompanion(qs("#view"), chId); }
+          round(k + 1); return;
+        }
+        finish(acc);
+      }).catch(function (err) { if (acc) finish(acc); else failed(); });
+    })(0);
   }
 
   function extractReplyText(data) {
