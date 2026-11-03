@@ -2458,9 +2458,7 @@
       qs("#view").innerHTML = '<div class="empty">' + esc(loadFailMsg) + '<br><span style="font-size:11px;">' + esc(String(err)) + '</span></div>';
     });
 
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
-    }
+    // 自動更新與 Service Worker 註冊改由 upd321.js 掛件負責（updateViaCache:'none'、version.json 輪詢、空閒自動套用）
   }
 
   init();

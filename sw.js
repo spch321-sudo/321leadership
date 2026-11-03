@@ -1,92 +1,87 @@
-// 321領導力 — Service Worker
-// Versioned cache: bump VERSION whenever app shell or data content changes,
-// otherwise already-installed PWA users will keep seeing stale content.
-var VERSION = "v1.3.18-k3m-vp1023-gx1103";
-var SHELL_CACHE = "l321-shell-" + VERSION;
-var DATA_CACHE = "l321-data-" + VERSION;
+/* 321領導力 Service Worker —— 自動更新版（網路優先）
+   ‧ 每次發佈 VER 都不同 → 瀏覽器發現 sw.js 位元組改變就安裝新 SW（register 用 updateViaCache:'none'）
+   ‧ install：skipWaiting；預載用 cache:'reload' 繞過 GitHub Pages 約 10 分鐘的 HTTP 快取
+   ‧ activate：只刪自己前綴（ldr321-）的舊快取——同一個 github.io 網域還有其他 321 App，共用 Cache Storage 不可全刪；
+     clients.claim，通知所有頁面；背景中的舊頁面直接帶到新版
+   ‧ fetch：HTML／JS／JSON／CSS 網路優先（no-cache），離線才用快取；圖片等快取優先；
+     version.json 永遠 no-store；影音與 Range 請求不攔截；範圍外（其他 App）與跨網域不碰 */
+var VER = '1.3.19';
+var PFX = 'ldr321-';
+var V = PFX + VER;
+var SHELL = ["./", "./index.html", "./app.js", "./coread.js?v=1.3.18", "./peerjs.min.js?v=1.3.18", "./upd321.js", "./manifest.json", "./icon-72.png", "./icon-96.png", "./icon-128.png", "./icon-144.png", "./icon-152.png", "./icon-180.png", "./icon-192.png", "./icon-384.png", "./icon-512.png", "./data.zh.json", "./data.zs.json", "./data.en.json"];
+var HOME = 'index.html';
 
-var SHELL_FILES = [
-  "./",
-  "./index.html",
-  "./app.js",
-  "./coread.js?v=1.3.18",
-  "./peerjs.min.js?v=1.3.18",
-  "./manifest.json",
-  "./icon-72.png",
-  "./icon-96.png",
-  "./icon-128.png",
-  "./icon-144.png",
-  "./icon-152.png",
-  "./icon-180.png",
-  "./icon-192.png",
-  "./icon-384.png",
-  "./icon-512.png",
-];
+function mine(k) { return k.indexOf(PFX) === 0 || k.indexOf('l321-shell-') === 0 || k.indexOf('l321-data-') === 0; }
+function keyOf(href) {
+  var u = new URL(href, self.location);
+  var p = u.pathname; if (/\/$/.test(p)) p += HOME;
+  return u.origin + p;
+}
 
-var DATA_FILES = [
-  "./data.zh.json",
-  "./data.zs.json",
-  "./data.en.json",
-];
-
-self.addEventListener("install", function (event) {
-  event.waitUntil(
-    caches.open(SHELL_CACHE).then(function (cache) {
-      return cache.addAll(SHELL_FILES);
-    }).then(function () {
-      return self.skipWaiting();
-    })
-  );
+self.addEventListener('install', function (e) {
+  self.skipWaiting();
+  e.waitUntil(caches.open(V).then(function (c) {
+    return Promise.all(SHELL.map(function (u) {
+      return fetch(new Request(u, { cache: 'reload' })).then(function (r) { if (r && r.ok) return c.put(keyOf(u), r); })['catch'](function () { });
+    }));
+  }));
 });
 
-self.addEventListener("activate", function (event) {
-  event.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(
-        keys.filter(function (k) { return k.indexOf("l321-") === 0 && k !== SHELL_CACHE && k !== DATA_CACHE; })
-          .map(function (k) { return caches.delete(k); })
-      );
-    }).then(function () { return self.clients.claim(); })
-  );
+self.addEventListener('activate', function (e) {
+  e.waitUntil(caches.keys().then(function (ks) {
+    return Promise.all(ks.filter(function (k) { return mine(k) && k !== V; }).map(function (k) { return caches['delete'](k); }));
+  }).then(function () { return self.clients.claim(); }).then(function () {
+    return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  }).then(function (cs) {
+    cs.forEach(function (c) {
+      try { c.postMessage({ t: 'sw-updated', v: VER }); } catch (x) { }
+      if (c.visibilityState === 'hidden' && c.navigate) { try { c.navigate(c.url); } catch (x) { } }
+    });
+  }));
 });
 
-self.addEventListener("fetch", function (event) {
-  var url = new URL(event.request.url);
-  if (event.request.method !== "GET") return;
+self.addEventListener('message', function (e) {
+  if (e.data === 'skip' || e.data === 'SKIP_WAITING' || (e.data && (e.data.type === 'SKIP_WAITING' || e.data.type === 'skip-waiting'))) self.skipWaiting();
+});
 
-  // Never cache the AI companion proxy — always go live.
-  if (url.hostname.indexOf("workers.dev") >= 0) return;
+self.addEventListener('fetch', function (e) {
+  var r = e.request; if (r.method !== 'GET') return;
+  var u; try { u = new URL(r.url); } catch (x) { return; }
+  if (u.origin !== self.location.origin) return;
+  var p = u.pathname;
+  var scope = new URL('./', self.location).pathname;
+  if (p.indexOf(scope) !== 0) return;
+  if (/\.(mp3|m4a|aac|wav|ogg|opus|mp4|mov|webm)$/i.test(p) || r.headers.get('range')) return;
 
-  var isData = DATA_FILES.some(function (f) { return url.pathname.indexOf(f.replace("./", "/")) >= 0; });
-
-  if (isData) {
-    // stale-while-revalidate for content data (three-language JSON packs)
-    event.respondWith(
-      caches.open(DATA_CACHE).then(function (cache) {
-        return cache.match(event.request).then(function (cached) {
-          var fetchPromise = fetch(event.request).then(function (resp) {
-            if (resp && resp.ok) cache.put(event.request, resp.clone());
-            return resp;
-          }).catch(function () { return cached; });
-          return cached || fetchPromise;
-        });
-      })
-    );
+  if (/version\.json$/.test(p)) {
+    e.respondWith(fetch(u.origin + p + '?t=' + Date.now(), { cache: 'no-store' })['catch'](function () {
+      return new Response('{}', { headers: { 'Content-Type': 'application/json' } });
+    }));
     return;
   }
 
-  // cache-first for app shell
-  event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      return cached || fetch(event.request).then(function (resp) {
-        if (resp && resp.ok && url.origin === location.origin) {
-          var respClone = resp.clone();
-          caches.open(SHELL_CACHE).then(function (cache) { cache.put(event.request, respClone); });
-        }
-        return resp;
-      }).catch(function () {
-        if (event.request.mode === "navigate") return caches.match("./index.html");
+  var nav = r.mode === 'navigate' || /\.html$/.test(p) || /\/$/.test(p);
+  if (nav || /\.(json|js|css|webmanifest)$/.test(p)) {
+    var key = keyOf(u.href);
+    e.respondWith(fetch(u.origin + p + u.search, { cache: 'no-cache', credentials: 'same-origin' }).then(function (resp) {
+      if (resp && resp.ok) { var cp = resp.clone(); caches.open(V).then(function (c) { c.put(key, cp); }); }
+      return resp;
+    })['catch'](function () {
+      return caches.match(key).then(function (h) {
+        if (h) return h;
+        return caches.match(r, { ignoreSearch: true }).then(function (h2) {
+          return h2 || (nav ? caches.match(u.origin + scope + HOME) : undefined);
+        });
       });
-    })
-  );
+    }));
+    return;
+  }
+
+  e.respondWith(caches.match(r, { ignoreSearch: true }).then(function (h) {
+    return h || fetch(r).then(function (resp) {
+      if (resp && resp.ok) { var cp = resp.clone(); caches.open(V).then(function (c) { c.put(r, cp); }); }
+      return resp;
+    });
+  }));
 });
+
