@@ -1926,27 +1926,27 @@
     if (BG_KEYS.indexOf(u.xzOpt.bg) < 0) u.xzOpt.bg = "none";
     return u.xzOpt;
   }
+  /* ===== XZ2（-xz1103）：小智最新功能共用套件——回答長度五段、讀者資料、慕道友信仰背景、設定頁區塊、滿版小智頁摘要列 ===== */
+  var xzCurCh = null;
+  XZ2.init({
+    app: "leadership", pfx: "ldr321-", ownAud: true,
+    lang: function () { return state.lang; },
+    aud: { get: function () { return xo().aud; }, set: function (k) { xo().aud = k; saveUser(); } },
+    legacyLen: function () { return xo().len; },
+    ctxWord: "課文脈絡", ctxWordZs: "课文脉络", ctxWordEn: "the lesson context",
+    qsLabel: ["對象範例題", "对象范例题", "Examples for me"],
+    reAnswer: function (m) { return xzReAnswer(xzCurCh, m); },
+    onAsk: function (q) { var ta = qs("#chatIn"); if (ta) { ta.value = q; sendChat(xzCurCh); } },
+    toast: function (m) { uiToast(m); },
+    readCtx: function () { try { var c = xzCurCh && D().chapters[xzCurCh]; return c ? [(state.lang === "en" ? "Currently reading: " : "目前讀到：") + c.numFull + " " + c.title] : []; } catch (e) { return []; } }
+  });
+  XZ2.watchScroll();
   function xzOptSys() {
-    var o = xo(), s = "\n" + tx("aud_" + o.aud);
-    if (o.aud === "seeker") s += tx("skbg_" + o.bg);
-    if (o.len !== "mid") s += tx("lenSys_" + o.len);
-    return s + tx("prayRule");
+    /* 回答對象用本 App 的領導力版本；信仰背景、讀者資料、回答長度（五段）改由 XZ2 提供，只送一次 */
+    var o = xo();
+    return "\n" + tx("aud_" + o.aud) + XZ2.sysTail() + tx("prayRule");
   }
-  function xzOptsHtml() {
-    var o = xo(), L = tx("auds").split("|"), ln = tx("lens").split("|"), bn = tx("bgNames").split("|");
-    var ai = AUD_KEYS.indexOf(o.aud), li = LEN_KEYS.indexOf(o.len), bi = BG_KEYS.indexOf(o.bg), sk = o.aud === "seeker";
-    var sum = L[ai].replace(/^\S+\s/, "") + "　·　" + (sk ? bn[bi] + "　·　" : "") + ln[li];
-    var h = '<button type="button" class="opt-sum" data-xo="toggle"><span>⚙️ ' + esc(L[ai].split(" ")[0]) + " " + esc(sum) + "</span><b>" + (xzOptOpen ? "▲" : "▼") + "</b></button>";
-    if (!xzOptOpen) return h;
-    h += '<div class="opt-body"><div class="optrow"><button type="button" class="qs-toggle aud-tog' + (xzAudOpen ? " on" : "") + '" data-xo="audtog">' + esc(L[ai].split(" ")[0]) + " " + esc(tx("audNowS", L[ai].replace(/^\S+\s/, ""))) + "</button></div>";
-    if (xzAudOpen) {
-      h += '<div class="audgrid">' + AUD_KEYS.map(function (k, i) { return '<button type="button" class="chip' + (i === ai ? " on" : "") + '" data-xo="aud" data-i="' + i + '">' + esc(L[i]) + "</button>"; }).join("") + "</div>";
-      h += '<div class="xs muted" style="margin:6px 0 8px">' + esc(tx("audD_" + o.aud)) + "</div>";
-    }
-    h += '<div class="optline"><span class="optlab">' + esc(tx("lenT")) + "</span>" + ln.map(function (l, i) { return '<button type="button" class="chip' + (i === li ? " on" : "") + '" data-xo="len" data-i="' + i + '">' + esc(l) + "</button>"; }).join("") + "</div>";
-    if (sk) h += '<div class="optline"><span class="optlab">' + esc(tx("bgT")) + "</span>" + tx("bgs").split("|").map(function (l, i) { return '<button type="button" class="chip' + (i === bi ? " on" : "") + '" data-xo="bg" data-i="' + i + '">' + esc(l) + "</button>"; }).join("") + "</div>";
-    return h + "</div>";
-  }
+  function xzOptsHtml() { return XZ2.controlsHtml({ qs: true }); }
   function xzFuHtml() {
     var a = tx("fu_" + xo().aud).split("|"), h = '<div class="fu">';
     a.forEach(function (x) { var p = x.split("~"); h += '<button type="button" class="fu-chip" data-q="' + esc(p[1] || p[0]) + '">' + esc(p[0]) + "</button>"; });
@@ -2002,10 +2002,32 @@
   function renderCompanion(view, chId) {
     var d = D();
     var chId2 = chId || currentChapterHint();
+    xzCurCh = chId2;
     var curPartNo = (chId2 && d.chapters[chId2]) ? d.chapters[chId2].partNo : 1;
     if (!companionQsPart) companionQsPart = curPartNo || 1;
 
     var html = '<div class="chatwrap">';
+    html += '<div id="xzOpts">' + xzOptsHtml() + '</div>';
+    html += '<button type="button" class="qs-toggle" id="companionQsToggle">' + esc(companionQsOpen ? t().companionQsHide : t().companionQsToggle) + '</button>';
+    html += '<div class="qs-panel" id="companionQsPanel" ' + (companionQsOpen ? "" : 'hidden') + '>';
+    var qsData = d.companionQs || [];
+    html += '<div class="qs-parts" id="qsParts">';
+    qsData.forEach(function (p) {
+      html += '<button type="button" class="qs-partchip' + (p.partNo === companionQsPart ? ' on' : '') + '" data-part="' + p.partNo + '">' + p.partNo + '</button>';
+    });
+    html += '</div>';
+    var curPart = qsData.find(function (p) { return p.partNo === companionQsPart; });
+    if (curPart) {
+      html += '<div class="qs-partlabel">' + esc(curPart.label) + '</div>';
+      html += '<div class="qs-hint">' + esc(t().companionQsHint) + '</div>';
+      html += '<div class="qs-list">';
+      curPart.qs.forEach(function (q, qi) {
+        html += '<button type="button" class="qs-chip" data-qidx="' + qi + '">' + esc(q) + '</button>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+
     html += '<div class="chatlog" id="chatlog">';
     if (!chatSession.messages.length) {
       html += '<div class="msg ai">' + esc(t().companionIntro) + '</div>';
@@ -2033,27 +2055,6 @@
       if (mi === chatSession.messages.length - 1 && m.ok) html += xzFuHtml();
       html += '</div>';
     });
-    html += '</div>';
-
-    html += '<div id="xzOpts">' + xzOptsHtml() + '</div>';
-    html += '<button type="button" class="qs-toggle" id="companionQsToggle">' + esc(companionQsOpen ? t().companionQsHide : t().companionQsToggle) + '</button>';
-    html += '<div class="qs-panel" id="companionQsPanel" ' + (companionQsOpen ? "" : 'hidden') + '>';
-    var qsData = d.companionQs || [];
-    html += '<div class="qs-parts" id="qsParts">';
-    qsData.forEach(function (p) {
-      html += '<button type="button" class="qs-partchip' + (p.partNo === companionQsPart ? ' on' : '') + '" data-part="' + p.partNo + '">' + p.partNo + '</button>';
-    });
-    html += '</div>';
-    var curPart = qsData.find(function (p) { return p.partNo === companionQsPart; });
-    if (curPart) {
-      html += '<div class="qs-partlabel">' + esc(curPart.label) + '</div>';
-      html += '<div class="qs-hint">' + esc(t().companionQsHint) + '</div>';
-      html += '<div class="qs-list">';
-      curPart.qs.forEach(function (q, qi) {
-        html += '<button type="button" class="qs-chip" data-qidx="' + qi + '">' + esc(q) + '</button>';
-      });
-      html += '</div>';
-    }
     html += '</div>';
 
     html += '<div class="chatinput"><textarea id="chatIn" rows="1" placeholder="' + esc(t().companionPlaceholder) + '"></textarea><button id="chatSend">' + esc(t().companionSend) + '</button></div>';
@@ -2137,17 +2138,6 @@
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(chId2); }
     });
 
-    var optsEl = qs("#xzOpts", view);
-    if (optsEl) optsEl.addEventListener("click", function (e) {
-      var b = e.target.closest("[data-xo]"); if (!b) return;
-      var act = b.getAttribute("data-xo"), i2 = parseInt(b.getAttribute("data-i"), 10), o = xo();
-      if (act === "toggle") { xzOptOpen = !xzOptOpen; xzAudOpen = false; }
-      else if (act === "audtog") { xzAudOpen = !xzAudOpen; }
-      else if (act === "aud") { o.aud = AUD_KEYS[i2]; xzAudOpen = false; saveUser(); uiToast(tx("audSet", tx("auds").split("|")[i2].replace(/^\S+\s/, ""))); }
-      else if (act === "len") { o.len = LEN_KEYS[i2]; saveUser(); var lname = tx("lens").split("|")[i2]; renderCompanion(view, chId); if (!xzReAnswer(chId2, tx("lenSet", lname))) uiToast(tx("lenSet2", lname)); return; }
-      else if (act === "bg") { o.bg = BG_KEYS[i2]; saveUser(); var bname = tx("bgNames").split("|")[i2]; renderCompanion(view, chId); if (!xzReAnswer(chId2, tx("bgSet", bname))) uiToast(tx("bgSet2", bname)); return; }
-      var op = qs("#xzOpts", view); if (op) op.innerHTML = xzOptsHtml();
-    });
     qs("#companionQsToggle", view).addEventListener("click", function () {
       companionQsOpen = !companionQsOpen;
       renderCompanion(view, chId);
@@ -2210,6 +2200,7 @@
     var ta = qs("#chatIn");
     var text = (ta.value || "").trim();
     if (!text) return;
+    try { XZ2.collapse(); } catch (e) { }
     chatSession.messages.push({ role: "user", text: text, id: newMsgId() });
     ta.value = "";
     renderCompanion(qs("#view"), chId);
@@ -2253,7 +2244,7 @@
     (function round(k) {
       var ms = baseMsgs.slice();
       if (k) { ms.push({ role: "assistant", content: acc }); ms.push({ role: "user", content: tx("xzGoOn") }); }
-      var payload = { model: "claude-sonnet-4-6", max_tokens: 1600, system: companionSystemPrompt(chId), messages: ms };
+      var payload = { model: "claude-sonnet-4-6", max_tokens: XZ2.maxTokens(), system: companionSystemPrompt(chId), messages: ms };
       fetch(XIAOZHI_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2360,6 +2351,8 @@
       return '<button data-voice="' + esc(o.id) + '">' + esc(o.label) + '</button>';
     }).join("") + '</div>';
     html += '</div></div>';
+
+    html += '<div class="section-title">' + esc(state.lang === "en" ? "Xiaozhi settings" : state.lang === "zs" ? "小智设置" : "小智設定") + '</div><div class="card">' + XZ2.settingsHtml() + '</div>';
 
     view.innerHTML = html;
     qsa("#themeswitch button", view).forEach(function (b) {
