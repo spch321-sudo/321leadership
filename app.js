@@ -1902,6 +1902,16 @@
   // View: 陪讀 Companion (小智領導力教練)
   // ---------------------------------------------------------------
   var chatSession = { messages: [] };
+  /* xzm.js（小智回答逐句跟讀／畫線）的小掛鉤：只暴露聊天物件與「一項一句」朗讀入口，不改任何既有行為 */
+  window.L321.xz = {
+    chat: function () { return chatSession; }, spk: spk,
+    speak: function (key, texts, title) { speakToggle(key, function () { return texts.map(function (s) { return ttsPronounceFix(s); }); }, title); },
+    stop: function () { spkStopAll(); },
+    expand: function (mi) {
+      var bubble = qs('.msg.ai[data-mi="' + mi + '"]'), body = bubble ? qs(".msg-body", bubble) : null, m = chatSession.messages[mi];
+      if (body && body.classList.contains("clamped")) { body.classList.remove("clamped"); if (m) m.collapsed = false; var cb = qs(".msg-collapse", bubble); if (cb && !cb.hidden) cb.textContent = t().msgCollapse; }
+    }
+  };
   var XIAOZHI_ENDPOINT = "https://xiaozhi-proxy.spch321.workers.dev";
   var pendingAsk = null; // set by "ask Xiaozhi about this line" from a highlighted paragraph
   var pendingAskAutoSend = false; // when true, renderCompanion sends pendingAsk immediately instead of just pre-filling it

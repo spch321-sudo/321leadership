@@ -5,10 +5,10 @@
      clients.claim，通知所有頁面；背景中的舊頁面直接帶到新版
    ‧ fetch：HTML／JS／JSON／CSS 網路優先（no-cache），離線才用快取；圖片等快取優先；
      version.json 永遠 no-store；影音與 Range 請求不攔截；範圍外（其他 App）與跨網域不碰 */
-var VER = '1.3.20-xz1103';
+var VER = '1.3.20-xz1103-xzm1103';
 var PFX = 'ldr321-';
 var V = PFX + VER;
-var SHELL = ["./", "./index.html", "./app.js", "./coread.js?v=1.3.18", "./peerjs.min.js?v=1.3.18", "./upd321.js", "./xz2.js", "./manifest.json", "./icon-72.png", "./icon-96.png", "./icon-128.png", "./icon-144.png", "./icon-152.png", "./icon-180.png", "./icon-192.png", "./icon-384.png", "./icon-512.png", "./data.zh.json", "./data.zs.json", "./data.en.json"];
+var SHELL = ["./", "./index.html", "./app.js", "./coread.js?v=1.3.18", "./peerjs.min.js?v=1.3.18", "./upd321.js", "./xz2.js", "./xzm.js", "./manifest.json", "./icon-72.png", "./icon-96.png", "./icon-128.png", "./icon-144.png", "./icon-152.png", "./icon-180.png", "./icon-192.png", "./icon-384.png", "./icon-512.png", "./data.zh.json", "./data.zs.json", "./data.en.json"];
 var HOME = 'index.html';
 
 function mine(k) { return k.indexOf(PFX) === 0 || k.indexOf('l321-shell-') === 0 || k.indexOf('l321-data-') === 0; }
